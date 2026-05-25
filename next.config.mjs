@@ -1,0 +1,20 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  turbopack: {
+    // Ensures Turbopack resolves `next` from this app (avoids wrong root with mixed lockfiles).
+    root: projectRoot,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+}
+
+export default nextConfig
