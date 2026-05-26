@@ -16,6 +16,7 @@ import {
   isApiConfigured,
 } from "@/lib/api";
 import { apiProductToStoreProduct } from "@/lib/map-api-product";
+import { riceImageForProduct } from "@/lib/rice-images";
 
 export interface Product {
   id: string;

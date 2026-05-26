@@ -23,19 +23,28 @@ export function riceImageForProduct(name: string): string {
   return RICE_PRODUCT_IMAGES[name.trim()] ?? RICE_PLACEHOLDER;
 }
 
-/** Broken Unsplash IDs we previously seeded — always use local file instead */
-const BROKEN_UNSPLASH = [
+/** Remote URLs that are not rice (old skincare/food seeds) — use local rice photos */
+const NON_RICE_REMOTE_PATTERNS = [
   "1586201375767",
   "1604329766861",
   "1536304993881",
   "1589302168068",
+  "1556228578",
+  "1620916566398",
+  "1608248597279",
+  "1584308666744",
+  "1570194065650",
+  "1550572017",
+  "1596755389378",
+  "images.unsplash.com",
+  "images.pexels.com",
 ];
 
 export function isBrokenRemoteImage(url: string): boolean {
   const u = url.trim().toLowerCase();
   if (!u) return true;
   if (u.startsWith("/images/")) return false;
-  if (BROKEN_UNSPLASH.some((id) => u.includes(id))) return true;
+  if (NON_RICE_REMOTE_PATTERNS.some((id) => u.includes(id))) return true;
   return false;
 }
 
