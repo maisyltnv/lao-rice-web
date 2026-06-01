@@ -37,9 +37,9 @@ echo "==> Build Next.js"
 npm run build
 
 echo "==> Restart service"
-systemctl restart "$SERVICE"
+sudo systemctl restart "$SERVICE"
 sleep 3
-systemctl is-active --quiet "$SERVICE"
+sudo systemctl is-active --quiet "$SERVICE"
 
 echo "==> Health check"
 curl -sf "http://127.0.0.1:${WEB_PORT}/admin/login" >/dev/null
