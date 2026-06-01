@@ -69,6 +69,10 @@ echo "==> Install dependencies and build"
 npm ci
 npm run build
 
+DEPLOY_USER="${SUDO_USER:-deploy}"
+if [ "$DEPLOY_USER" = "root" ]; then DEPLOY_USER="deploy"; fi
+chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
+
 echo "==> Install systemd service"
 cp deploy/lao-rice-web.service /etc/systemd/system/lao-rice-web.service
 systemctl daemon-reload
