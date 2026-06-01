@@ -4,10 +4,17 @@ set -euo pipefail
 APP_DIR="/opt/lao-rice-web"
 SERVICE="lao-rice-web"
 GITHUB_KEY="${GITHUB_KEY:-$HOME/.ssh/github_lao_rice_web}"
-API_URL="${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8081}"
 WEB_PORT="${PORT:-3000}"
 
 cd "$APP_DIR"
+
+# Keep existing production API URL unless explicitly overridden (auto-deploy must not reset to 127.0.0.1).
+if [ -n "${NEXT_PUBLIC_API_URL:-}" ]; then
+  API_URL="$NEXT_PUBLIC_API_URL"
+elif [ -f .env.production ]; then
+  API_URL="$(grep -E '^NEXT_PUBLIC_API_URL=' .env.production | head -1 | cut -d= -f2- || true)"
+fi
+API_URL="${API_URL:-http://62.171.159.75:8081}"
 
 if [ -f "$GITHUB_KEY" ]; then
   export GIT_SSH_COMMAND="ssh -i $GITHUB_KEY -o StrictHostKeyChecking=accept-new"
@@ -17,7 +24,7 @@ echo "==> Pull latest main"
 git fetch origin main
 git reset --hard origin/main
 
-echo "==> Ensure production env"
+echo "==> Ensure production env (API_URL=${API_URL})"
 cat > .env.production <<EOF
 NEXT_PUBLIC_API_URL=${API_URL}
 PORT=${WEB_PORT}
