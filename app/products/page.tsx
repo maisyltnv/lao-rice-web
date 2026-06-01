@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { Suspense, useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, Grid3X3, LayoutList, X } from "lucide-react";
@@ -40,7 +40,7 @@ function sortProducts(list: Product[], sortBy: string): Product[] {
   return result;
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { categories } = useStore();
@@ -361,5 +361,19 @@ export default function ProductsPage() {
         </>
       )}
     </motion.div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center py-24 text-muted-foreground">
+          ກຳລັງໂຫຼດ...
+        </div>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }
