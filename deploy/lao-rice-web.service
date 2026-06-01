@@ -1,0 +1,15 @@
+[Unit]
+Description=Lao Rice Web (store + admin)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/lao-rice-web
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/lao-rice-web/.env.production
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
