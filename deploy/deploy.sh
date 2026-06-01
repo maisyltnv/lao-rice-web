@@ -7,6 +7,7 @@ GITHUB_KEY="${GITHUB_KEY:-$HOME/.ssh/github_lao_rice_web}"
 WEB_PORT="${PORT:-3000}"
 
 cd "$APP_DIR"
+chmod +x deploy/deploy.sh 2>/dev/null || true
 
 # Keep existing production API URL unless explicitly overridden (auto-deploy must not reset to 127.0.0.1).
 if [ -n "${NEXT_PUBLIC_API_URL:-}" ]; then

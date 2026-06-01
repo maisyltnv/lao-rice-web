@@ -16,4 +16,4 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 20m
-          script: /opt/lao-rice-web/deploy/deploy.sh
+          script: bash /opt/lao-rice-web/deploy/deploy.sh
