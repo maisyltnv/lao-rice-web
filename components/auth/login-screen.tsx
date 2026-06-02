@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, type ComponentType } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,6 @@ export type LoginPortal = "customer" | "admin";
 
 export interface LoginScreenProps {
   portal: LoginPortal;
-  Icon: ComponentType<{ className?: string }>;
   brandTitle: string;
   brandSubtitle: string;
   redirectIfAuthed: string;
@@ -30,7 +30,6 @@ export interface LoginScreenProps {
 
 export function LoginScreen({
   portal,
-  Icon,
   brandTitle,
   brandSubtitle,
   redirectIfAuthed,
@@ -122,14 +121,7 @@ export function LoginScreen({
         )}
       >
         <div className="flex items-center gap-3 mb-8">
-          <div
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-xl",
-              isAdmin ? "bg-amber-500 text-slate-950" : "bg-primary text-primary-foreground"
-            )}
-          >
-            <Icon className="h-5 w-5" />
-          </div>
+          <BrandLogo size={44} />
           <div>
             <p
               className={cn(

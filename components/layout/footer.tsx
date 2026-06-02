@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Wheat, Phone, Mail, MapPin, Facebook, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, MessageCircle } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -36,9 +37,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary-foreground rounded-full flex items-center justify-center">
-                <Wheat className="h-5 w-5 text-primary" />
-              </div>
+              <BrandLogo size={40} />
               <span className="text-xl font-bold">ຮ້ານເຂົ້າສານ</span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">

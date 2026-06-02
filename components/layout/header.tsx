@@ -17,6 +17,7 @@ import {
 
 /** ຊ່ວຍເວລາ — ສະແດງເມນູ «ລູກຄ້າ» / ເຂົ້າລະບົບ */
 const SHOW_CUSTOMER_LOGIN = false;
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { OrderLookupDrawer } from "@/components/orders/order-lookup-drawer";
 import { ProductImage } from "@/components/products/product-image";
 import { Button } from "@/components/ui/button";
@@ -71,9 +72,7 @@ export function Header() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <Wheat className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <BrandLogo size={40} priority />
               <span className="text-xl font-bold text-primary hidden sm:block">
                 ຮ້ານເຂົ້າສານ
               </span>

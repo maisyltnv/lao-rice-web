@@ -1,13 +1,11 @@
 "use client";
 
-import { Shield } from "lucide-react";
 import { LoginScreen } from "@/components/auth/login-screen";
 
 export default function AdminLoginPage() {
   return (
     <LoginScreen
       portal="admin"
-      Icon={Shield}
       brandTitle="ເຂົ້າລະບົບແອັດມິນ"
       brandSubtitle="ຈັດການສິນຄ້າ ແລະ ຄຳສັ່ງ (ຕ້ອງມີ JWT)"
       redirectIfAuthed="/admin"

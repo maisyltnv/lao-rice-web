@@ -1,13 +1,11 @@
 "use client";
 
-import { Wheat } from "lucide-react";
 import { LoginScreen } from "@/components/auth/login-screen";
 
 export default function CustomerLoginPage() {
   return (
     <LoginScreen
       portal="customer"
-      Icon={Wheat}
       brandTitle="ເຂົ້າລະບົບລູກຄ້າ"
       brandSubtitle="ສັ່ງເຂົ້າອອນລາຍ ແລະ ຕິດຕາມຄຳສັ່ງຊື້"
       redirectIfAuthed="/"
