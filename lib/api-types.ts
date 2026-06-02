@@ -66,6 +66,7 @@ export interface ApiProduct {
   exchange_rate: number;
   profit_margin: number;
   final_price_lak: number;
+  stock: number;
   source_url?: string;
   created_at: string;
   updated_at: string;
@@ -115,6 +116,7 @@ export interface ApiCreateProductBody {
   original_price_cny: number;
   exchange_rate: number;
   profit_margin: number;
+  stock: number;
   description?: string;
   image_url?: string;
   source_url?: string;
@@ -131,6 +133,7 @@ export interface ApiUpdateProductBody {
   exchange_rate?: number;
   profit_margin?: number;
   final_price_lak?: number;
+  stock?: number;
   source_url?: string;
 }
 

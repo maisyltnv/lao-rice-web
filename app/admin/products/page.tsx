@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   Plus,
   Search,
-  ExternalLink,
   Edit,
   Trash2,
   Package,
@@ -67,14 +66,31 @@ export default function AdminProductsPage() {
     descriptionLao: "",
     howToUse: "",
     howToUseLao: "",
-    priceCNY: "",
+    costLAK: "",
     marginPercent: "50",
     /** ຄ່າເລືອກ = ApiCategory.id (string) */
     category: "",
     stock: "50",
-    sourceUrl: "",
     imageUrl: "",
   });
+
+  const rate = typeof exchangeRate === "number" && exchangeRate > 0 ? exchangeRate : 3500;
+
+  const parseLak = (value: string): number => {
+    const raw = value.replace(/[,\s₭]/g, "").trim();
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const costLakToCny = (costLak: number): number => {
+    if (!Number.isFinite(costLak) || costLak <= 0) return NaN;
+    return costLak / rate;
+  };
+
+  const sellingLakFromCostLak = (costLak: number, marginPercent: number): number => {
+    if (!Number.isFinite(costLak) || !Number.isFinite(marginPercent)) return 0;
+    return Math.round(costLak * (1 + marginPercent / 100));
+  };
 
   const loadCategories = useCallback(async () => {
     if (!isApiConfigured()) {
@@ -130,11 +146,10 @@ export default function AdminProductsPage() {
       descriptionLao: "",
       howToUse: "",
       howToUseLao: "",
-      priceCNY: "",
+      costLAK: "",
       marginPercent: "50",
       category: getDefaultCategory(),
       stock: "50",
-      sourceUrl: "",
       imageUrl: "",
     });
     setIsModalOpen(true);
@@ -157,7 +172,7 @@ export default function AdminProductsPage() {
         descriptionLao: product.descriptionLao,
         howToUse: product.howToUse,
         howToUseLao: product.howToUseLao,
-        priceCNY: String(product.priceCNY),
+        costLAK: String(Math.round((product.priceCNY || 0) * rate)),
         marginPercent: String(product.marginPercent),
         category: cat
           ? String(cat.id)
@@ -165,7 +180,6 @@ export default function AdminProductsPage() {
             ? String(apiCategories[0].id)
             : "",
         stock: String(product.stock),
-        sourceUrl: product.sourceUrl,
         imageUrl: product.images[0] ?? "",
       });
     };
@@ -176,6 +190,7 @@ export default function AdminProductsPage() {
         const api = await apiGetProduct(product.id);
         const cid = api.category_id ?? api.category?.id;
         const marginPct = profitMarginToPercent(api.profit_margin);
+        const costLak = Math.round((api.original_price_cny || 0) * rate);
         setNewProduct({
           name: product.name,
           nameLao: api.name,
@@ -183,11 +198,10 @@ export default function AdminProductsPage() {
           descriptionLao: api.description ?? "",
           howToUse: product.howToUse,
           howToUseLao: product.howToUseLao,
-          priceCNY: String(api.original_price_cny),
+          costLAK: String(costLak),
           marginPercent: String(marginPct),
           category: cid != null ? String(cid) : "",
-          stock: String(product.stock),
-          sourceUrl: api.source_url ?? product.sourceUrl ?? "",
+          stock: String(typeof api.stock === "number" ? api.stock : product.stock),
           imageUrl:
             api.image_url?.trim() || product.images[0] || "",
         });
@@ -237,11 +251,16 @@ export default function AdminProductsPage() {
 
   const handleSaveProduct = async () => {
     setApiError(null);
-    const priceCNY = parseFloat(newProduct.priceCNY);
+    const costLAK = parseLak(newProduct.costLAK);
     const marginPercent = parseFloat(newProduct.marginPercent);
     const stock = parseInt(newProduct.stock, 10);
 
-    if (isNaN(priceCNY) || isNaN(marginPercent) || isNaN(stock)) return;
+    if (isNaN(costLAK) || isNaN(marginPercent) || isNaN(stock)) return;
+    if (costLAK <= 0) return;
+    if (!Number.isFinite(rate) || rate <= 0) return;
+
+    const priceCNY = costLakToCny(costLAK);
+    if (isNaN(priceCNY) || priceCNY <= 0) return;
 
     const selectedCat = apiCategories.find(
       (c) => String(c.id) === newProduct.category
@@ -257,11 +276,10 @@ export default function AdminProductsPage() {
         descriptionLao: "",
         howToUse: "",
         howToUseLao: "",
-        priceCNY: "",
+        costLAK: "",
         marginPercent: "50",
         category: getDefaultCategory(),
         stock: "50",
-        sourceUrl: "",
         imageUrl: "",
       });
     };
@@ -296,15 +314,10 @@ export default function AdminProductsPage() {
                   howToUseLao: newProduct.howToUseLao,
                   priceCNY,
                   marginPercent,
-                  priceLAK: calculateSellingPrice(
-                    priceCNY,
-                    marginPercent,
-                    exchangeRate
-                  ),
+                  priceLAK: sellingLakFromCostLak(costLAK, marginPercent),
                   category: storeSlug,
                   categoryLao: storeNameLao,
                   stock,
-                  sourceUrl: newProduct.sourceUrl,
                   images: [
                     newProduct.imageUrl.trim() || p.images[0] || imageUrlForApi,
                   ],
@@ -356,9 +369,9 @@ export default function AdminProductsPage() {
           image_url: imageUrlForApi,
           category_id: selectedCat.id,
           original_price_cny: priceCNY,
-          exchange_rate: exchangeRate,
+          exchange_rate: rate,
           profit_margin: marginPercentToRatio(marginPercent),
-          source_url: newProduct.sourceUrl.trim() || undefined,
+          stock,
         });
         await refreshProducts();
         afterApiSave();
@@ -382,17 +395,13 @@ export default function AdminProductsPage() {
         howToUse: newProduct.howToUse,
         howToUseLao: newProduct.howToUseLao,
         priceCNY,
-        priceLAK: calculateSellingPrice(
-          priceCNY,
-          marginPercent,
-          exchangeRate
-        ),
+        priceLAK: sellingLakFromCostLak(costLAK, marginPercent),
         marginPercent,
         images: [imageUrlForApi],
         category: storeSlug,
         categoryLao: storeNameLao,
         stock,
-        sourceUrl: newProduct.sourceUrl,
+        sourceUrl: "",
         trustBadges: ["ຄຸນນະພາບດີ", "ສົ່ງໃນວຽງຈັນ"],
         isNew: true,
         isBestSeller: false,
@@ -437,11 +446,11 @@ export default function AdminProductsPage() {
         name: newProduct.nameLao || newProduct.name || "ສິນຄ້າ",
         category_id: selectedCat.id,
         original_price_cny: priceCNY,
-        exchange_rate: exchangeRate,
+        exchange_rate: rate,
         profit_margin: marginPercentToRatio(marginPercent),
+        stock,
         description: newProduct.descriptionLao || newProduct.description || "",
         image_url: imageUrlForApi,
-        source_url: newProduct.sourceUrl.trim() || "https://example.com",
       });
       await refreshProducts();
       afterApiSave();
@@ -523,7 +532,6 @@ export default function AdminProductsPage() {
                 <th className="text-left p-4 font-medium text-sm">ລາຄາຂາຍ (LAK)</th>
                 <th className="text-left p-4 font-medium text-sm">ກຳໄລ %</th>
                 <th className="text-left p-4 font-medium text-sm">ສະຕ໋ອກ</th>
-                <th className="text-left p-4 font-medium text-sm">ຜູ້ສະໜອງ</th>
                 <th className="text-right p-4 font-medium text-sm">ຈັດການ</th>
               </tr>
             </thead>
@@ -552,7 +560,9 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                   <td className="p-4 text-sm">{product.categoryLao}</td>
-                  <td className="p-4 text-sm">¥{product.priceCNY}</td>
+                  <td className="p-4 text-sm">
+                    {formatLAK(Math.round((product.priceCNY || 0) * rate))}
+                  </td>
                   <td className="p-4 text-sm font-medium text-primary">
                     {formatLAK(product.priceLAK)}
                   </td>
@@ -569,19 +579,6 @@ export default function AdminProductsPage() {
                     >
                       {product.stock} ຖົງ
                     </span>
-                  </td>
-                  <td className="p-4">
-                    {product.sourceUrl && (
-                      <a
-                        href={product.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        ເບິ່ງຜູ້ສະໜອງ
-                      </a>
-                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
@@ -695,13 +692,13 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  ລາຄາຊື້ຕົ້ນທຶນ (ຫຍວນ ¥)
+                  ລາຄາຊື້ຕົ້ນທຶນ (₭)
                 </label>
                 <Input
                   type="number"
-                  value={newProduct.priceCNY}
+                  value={newProduct.costLAK}
                   onChange={(e) =>
-                    setNewProduct({ ...newProduct, priceCNY: e.target.value })
+                    setNewProduct({ ...newProduct, costLAK: e.target.value })
                   }
                   placeholder="0"
                 />
@@ -760,17 +757,9 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  ລິ້ງຜູ້ສະໜອງ / ສາງ (ທາງເລືອກ)
-                </label>
-                <Input
-                  type="url"
-                  value={newProduct.sourceUrl}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, sourceUrl: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
+                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                  ໝາຍເຫດ: ໜ້ານີ້ບໍ່ໃຊ້ “ລິ້ງຜູ້ສະໜອງ” ແລ້ວ (ບໍ່ແມ່ນ dropship)
+                </div>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">ລິ້ງຮູບພາບ</label>
@@ -805,21 +794,20 @@ export default function AdminProductsPage() {
               </div>
 
               {/* Preview */}
-              {newProduct.priceCNY && (
+              {newProduct.costLAK && (
                 <div className="md:col-span-2 p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm font-medium mb-2">ຄາດຄະເນລາຄາຂາຍ:</p>
                   <p className="text-2xl font-bold text-primary">
                     {formatLAK(
-                      calculateSellingPrice(
-                        parseFloat(newProduct.priceCNY) || 0,
-                        parseFloat(newProduct.marginPercent) || 50,
-                        exchangeRate
+                      sellingLakFromCostLak(
+                        parseLak(newProduct.costLAK) || 0,
+                        parseFloat(newProduct.marginPercent) || 50
                       )
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    (ລາຄາຕົ້ນ ¥{newProduct.priceCNY} × ອັດຕາແລກ{" "}
-                    {formatLAK(exchangeRate)} × ກຳໄລ {newProduct.marginPercent}%)
+                    (ຕົ້ນທຶນ {formatLAK(parseLak(newProduct.costLAK) || 0)} + ກຳໄລ{" "}
+                    {newProduct.marginPercent}%)
                   </p>
                 </div>
               )}

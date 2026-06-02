@@ -24,11 +24,9 @@ import { useAuth } from "@/lib/auth";
 import {
   apiAdminListOrders,
   apiGetOrder,
-  apiGetOrderSourceLinks,
   apiUpdateOrderStatus,
   isApiConfigured,
 } from "@/lib/api";
-import type { ApiOrderSourceLink } from "@/lib/api-types";
 import { apiOrderToStoreOrder } from "@/lib/map-api-order";
 import { PaymentReceiptPreview } from "@/components/orders/payment-receipt-preview";
 
@@ -93,11 +91,7 @@ export default function AdminOrdersPage() {
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [sourceLinksLoading, setSourceLinksLoading] = useState(false);
-  const [sourceLinksError, setSourceLinksError] = useState<string | null>(null);
-  const [procurementLinks, setProcurementLinks] = useState<ApiOrderSourceLink[]>(
-    []
-  );
+  // Supplier links were for dropship; not used for rice shop.
 
   const loadOrders = useCallback(async () => {
     if (!isApiConfigured()) {
@@ -139,14 +133,9 @@ export default function AdminOrdersPage() {
 
     let cancelled = false;
     setDetailLoading(true);
-    setSourceLinksError(null);
-    setProcurementLinks([]);
     (async () => {
       try {
-        const [full, sourceRes] = await Promise.all([
-          apiGetOrder(apiId),
-          apiGetOrderSourceLinks(apiId),
-        ]);
+        const full = await apiGetOrder(apiId);
         if (cancelled) return;
         const mapped = apiOrderToStoreOrder(full);
         setSelectedOrder((prev) =>
@@ -159,7 +148,6 @@ export default function AdminOrdersPage() {
             o.id === selectedOrder.id ? { ...o, ...mapped, id: o.id } : o
           )
         );
-        setProcurementLinks(sourceRes.links ?? []);
       } catch {
         /* keep list row data */
       } finally {
@@ -172,58 +160,7 @@ export default function AdminOrdersPage() {
     };
   }, [selectedOrder?.id, adminToken]);
 
-  const openProcurementLinks = useCallback(async () => {
-    if (!selectedOrder) return;
-    setSourceLinksError(null);
-
-    const fromState = procurementLinks
-      .map((l) => l.source_url?.trim())
-      .filter((u): u is string => Boolean(u));
-    if (fromState.length > 0) {
-      fromState.forEach((url) => window.open(url, "_blank", "noopener,noreferrer"));
-      return;
-    }
-
-    const fromItems = selectedOrder.items
-      .map((i) => i.product.sourceUrl?.trim())
-      .filter((u): u is string => Boolean(u));
-    if (fromItems.length > 0) {
-      fromItems.forEach((url) => window.open(url, "_blank", "noopener,noreferrer"));
-      return;
-    }
-
-    const apiId = resolveOrderApiId(selectedOrder);
-    if (!apiId) {
-      setSourceLinksError("ບໍ່ພົບ order id ສຳລັບ API");
-      return;
-    }
-    if (!adminToken) {
-      setSourceLinksError("ຕ້ອງເຂົ້າ /admin/login");
-      return;
-    }
-
-    setSourceLinksLoading(true);
-    try {
-      const res = await apiGetOrderSourceLinks(apiId);
-      const urls = (res.links ?? [])
-        .map((l) => l.source_url?.trim())
-        .filter((u): u is string => Boolean(u));
-      setProcurementLinks(res.links ?? []);
-      if (urls.length === 0) {
-        setSourceLinksError(
-          "ບໍ່ມີລິ້ງຜູ້ສະໜອງ — ຕັ້ງໃນຫນ້າຈັດການສິນຄ້າກ່ອນ"
-        );
-        return;
-      }
-      urls.forEach((url) => window.open(url, "_blank", "noopener,noreferrer"));
-    } catch (err) {
-      setSourceLinksError(
-        `ໂຫຼດລິ້ງຜູ້ສະໜອງບໍ່ສຳເລັດ: ${formatOrdersApiError(err)}`
-      );
-    } finally {
-      setSourceLinksLoading(false);
-    }
-  }, [selectedOrder, procurementLinks, adminToken]);
+  // Removed supplier link actions (not dropship).
 
   const filteredOrders = orders.filter((order) => {
     const q = searchQuery.toLowerCase();
@@ -571,13 +508,6 @@ export default function AdminOrdersPage() {
                 {selectedOrder.items.length > 0 ? (
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => {
-                      const link =
-                        procurementLinks.find(
-                          (l) =>
-                            String(l.product_id) === item.product.id
-                        )?.source_url?.trim() ||
-                        item.product.sourceUrl?.trim() ||
-                        "";
                       return (
                         <div
                           key={`${item.product.id}-${idx}`}
@@ -594,22 +524,6 @@ export default function AdminOrdersPage() {
                               ID {item.product.id} · x{item.quantity} ·{" "}
                               {formatLAK(item.product.priceLAK * item.quantity)}
                             </p>
-                            {link ? (
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                ເປີດລິ້ງຜູ້ສະໜອງ
-                              </a>
-                            ) : (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                ບໍ່ມີລິ້ງຜູ້ສະໜອງ
-                              </p>
-                            )}
                           </div>
                         </div>
                       );
@@ -659,12 +573,6 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              {sourceLinksError && (
-                <p className="text-xs text-destructive rounded-lg bg-destructive/10 px-3 py-2">
-                  {sourceLinksError}
-                </p>
-              )}
-
               <div className="flex items-center gap-3 pb-6">
                 <Button
                   variant="outline"
@@ -672,22 +580,6 @@ export default function AdminOrdersPage() {
                   onClick={() => setSelectedOrder(null)}
                 >
                   ປິດ
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => void openProcurementLinks()}
-                  disabled={
-                    sourceLinksLoading ||
-                    detailLoading ||
-                    selectedOrder.items.length === 0
-                  }
-                >
-                  {sourceLinksLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                  )}
-                  ເປີດລິ້ງຜູ້ສະໜອງ
                 </Button>
               </div>
             </div>
