@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; HealthBeautyApp/1.0; +image-resolver)",
+          "Mozilla/5.0 (compatible; LaoRiceWeb/1.0; +image-resolver)",
         Accept: "text/html",
       },
       next: { revalidate: 3600 },

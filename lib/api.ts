@@ -462,6 +462,34 @@ export async function apiCreateOrder(
   return data;
 }
 
+export type ApiCreateOrderMultipartInput = {
+  items: ApiCreateOrderBody["items"];
+  shipping: ApiCreateOrderBody["shipping"];
+  payment_method: ApiCreateOrderBody["payment_method"];
+  payment_receipt: File;
+};
+
+/** Public — POST /orders as multipart (BCEL QR + payment_receipt file, same as mobile app). */
+export async function apiCreateOrderMultipart(
+  input: ApiCreateOrderMultipartInput
+): Promise<ApiOrder> {
+  const form = new FormData();
+  form.append("payment_method", input.payment_method);
+  form.append("items", JSON.stringify(input.items));
+  form.append("shipping", JSON.stringify(input.shipping));
+  form.append("payment_receipt", input.payment_receipt, input.payment_receipt.name);
+
+  const { data } = await axios.post<ApiOrder>(
+    `${getApiBaseUrl()}/orders`,
+    form,
+    {
+      headers: { Accept: "application/json" },
+      timeout: 60_000,
+    }
+  );
+  return data;
+}
+
 /** Public — GET /exchange-rate */
 export async function apiGetExchangeRate(): Promise<ApiExchangeRate> {
   const { data } = await publicClient.get<ApiExchangeRate>("/exchange-rate");

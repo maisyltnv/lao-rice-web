@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <h3 className="font-semibold">ອັດຕາແລກປ່ຽນ</h3>
-              <p className="text-sm text-muted-foreground">CNY → LAK</p>
+              <p className="text-sm text-muted-foreground">ຕົ້ນທຶນ → ລາຄາຂາຍ</p>
             </div>
           </div>
           <p className="text-3xl font-bold text-primary">
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <h3 className="font-semibold">ສິນຄ້າໃກ້ໝົດ</h3>
-              <p className="text-sm text-muted-foreground">ນ້ອຍກວ່າ 10 ຊິ້ນ</p>
+              <p className="text-sm text-muted-foreground">ນ້ອຍກວ່າ 10 ຖົງ</p>
             </div>
           </div>
           <p className="text-3xl font-bold text-red-600">{lowStockProducts}</p>

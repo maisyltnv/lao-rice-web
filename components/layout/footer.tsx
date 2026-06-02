@@ -56,13 +56,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/category/supplements" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  ອາຫານເສີມ
+                <Link href="/products?category=khao-jao" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  ເຂົ້າຈ້າວ
                 </Link>
               </li>
               <li>
-                <Link href="/category/skincare" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  ດູແລຜິວໜັງ
+                <Link href="/products?category=khao-niew" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  ເຂົ້າໜຽວ
                 </Link>
               </li>
               <li>
@@ -114,7 +114,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/80">
                 <Mail className="h-4 w-4" />
-                <span>info@healthbeauty.la</span>
+                <span>info@laorice.la</span>
               </li>
               <li className="flex items-start gap-2 text-primary-foreground/80">
                 <MapPin className="h-4 w-4 mt-0.5" />

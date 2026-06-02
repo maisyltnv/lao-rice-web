@@ -133,7 +133,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </p>
               {product.stock < 10 && (
                 <span className="text-xs text-destructive">
-                  ເຫຼືອ {product.stock} ຊິ້ນ
+                  ເຫຼືອ {product.stock} ຖົງ
                 </span>
               )}
             </div>

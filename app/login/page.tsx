@@ -1,15 +1,15 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Wheat } from "lucide-react";
 import { LoginScreen } from "@/components/auth/login-screen";
 
 export default function CustomerLoginPage() {
   return (
     <LoginScreen
       portal="customer"
-      Icon={Heart}
+      Icon={Wheat}
       brandTitle="ເຂົ້າລະບົບລູກຄ້າ"
-      brandSubtitle="ສັ່ງຊື້, ຕິດຕາມຄຳສັ່ງ ແລະ ສິດທິພິເສດ"
+      brandSubtitle="ສັ່ງເຂົ້າອອນລາຍ ແລະ ຕິດຕາມຄຳສັ່ງຊື້"
       redirectIfAuthed="/"
       redirectAfterAuth="/"
       alternateHint={{
