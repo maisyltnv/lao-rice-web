@@ -9,7 +9,7 @@ else
   _DEPLOY_HOME="${HOME}"
 fi
 GITHUB_KEY="${GITHUB_KEY:-${_DEPLOY_HOME}/.ssh/github_lao_rice_web}"
-API_URL="${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8081}"
+API_URL="${NEXT_PUBLIC_API_URL:-http://62.171.159.75:8081}"
 WEB_PORT="${PORT:-3000}"
 
 setup_git_ssh() {

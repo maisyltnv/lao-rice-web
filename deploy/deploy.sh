@@ -9,13 +9,16 @@ WEB_PORT="${PORT:-3000}"
 cd "$APP_DIR"
 chmod +x deploy/deploy.sh 2>/dev/null || true
 
-# Keep existing production API URL unless explicitly overridden (auto-deploy must not reset to 127.0.0.1).
+# Browser must call the public API host (never 127.0.0.1 from vps-setup).
 if [ -n "${NEXT_PUBLIC_API_URL:-}" ]; then
   API_URL="$NEXT_PUBLIC_API_URL"
 elif [ -f .env.production ]; then
   API_URL="$(grep -E '^NEXT_PUBLIC_API_URL=' .env.production | head -1 | cut -d= -f2- || true)"
 fi
 API_URL="${API_URL:-http://62.171.159.75:8081}"
+case "$API_URL" in
+  *127.0.0.1*|*localhost*) API_URL="http://62.171.159.75:8081" ;;
+esac
 
 if [ -f "$GITHUB_KEY" ]; then
   export GIT_SSH_COMMAND="ssh -i $GITHUB_KEY -o StrictHostKeyChecking=accept-new"
