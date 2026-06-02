@@ -211,14 +211,14 @@ export default function AdminOrdersPage() {
       setProcurementLinks(res.links ?? []);
       if (urls.length === 0) {
         setSourceLinksError(
-          "ບໍ່ມີລິ້ງສັ່ງຊື້ — ຕັ້ງ source_url ໃນສິນຄ້າກ່ອນ (ໜ້າຈັດການສິນຄ້າ)"
+          "ບໍ່ມີລິ້ງຜູ້ສະໜອງ — ຕັ້ງໃນຫນ້າຈັດການສິນຄ້າກ່ອນ"
         );
         return;
       }
       urls.forEach((url) => window.open(url, "_blank", "noopener,noreferrer"));
     } catch (err) {
       setSourceLinksError(
-        `ໂຫຼດລິ້ງສັ່ງຊື້ບໍ່ສຳເລັດ: ${formatOrdersApiError(err)}`
+        `ໂຫຼດລິ້ງຜູ້ສະໜອງບໍ່ສຳເລັດ: ${formatOrdersApiError(err)}`
       );
     } finally {
       setSourceLinksLoading(false);
@@ -603,11 +603,11 @@ export default function AdminOrdersPage() {
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <ExternalLink className="h-3 w-3" />
-                                ເປີດລິ້ງສັ່ງຊື້
+                                ເປີດລິ້ງຜູ້ສະໜອງ
                               </a>
                             ) : (
                               <p className="text-xs text-muted-foreground mt-1">
-                                ບໍ່ມີ source_url
+                                ບໍ່ມີລິ້ງຜູ້ສະໜອງ
                               </p>
                             )}
                           </div>
@@ -687,7 +687,7 @@ export default function AdminOrdersPage() {
                   ) : (
                     <ExternalLink className="h-4 w-4 mr-2" />
                   )}
-                  ໄປສັ່ງຊື້
+                  ເປີດລິ້ງຜູ້ສະໜອງ
                 </Button>
               </div>
             </div>

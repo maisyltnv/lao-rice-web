@@ -361,7 +361,7 @@ export default function AdminCategoriesPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, slug: e.target.value }))
                 }
-                placeholder="home-goods"
+                placeholder="khao-jao"
               />
             </div>
             <div className="grid gap-2">

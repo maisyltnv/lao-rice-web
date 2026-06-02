@@ -242,7 +242,7 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-2 text-destructive">
                   <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
                   <span className="text-sm font-medium">
-                    ເຄື່ອງຍັງເຫຼືອ {product.stock} ຊິ້ນ
+                    ເຫຼືອ {product.stock} ຖົງ
                   </span>
                 </div>
               )}
@@ -319,8 +319,8 @@ export default function ProductDetailPage() {
                   <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">ຂອງແທ້ 100%</p>
-                  <p className="text-xs text-muted-foreground">ຮັບປະກັນ</p>
+                  <p className="text-sm font-medium">ເຂົ້າຄຸນນະພາບ</p>
+                  <p className="text-xs text-muted-foreground">ຄັດເລືອກແລ້ວ</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ export default function ProductDetailPage() {
                 ລາຍລະອຽດສິນຄ້າ
               </button>
               <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground">
-                ວິທີໃຊ້
+                ວິທີເກັບຮັກສາ
               </button>
             </div>
           </div>
@@ -356,9 +356,10 @@ export default function ProductDetailPage() {
                 {product.descriptionLao}
               </p>
 
-              <h3 className="text-lg font-semibold mb-4">ວິທີໃຊ້</h3>
+              <h3 className="text-lg font-semibold mb-4">ວິທີເກັບຮັກສາ</h3>
               <p className="text-muted-foreground leading-relaxed">
-                {product.howToUseLao}
+                {product.howToUseLao ||
+                  "ເກັບໃນບ່ອນແຫ້ງ ປ້ອງກັນແມງໄມ້. ປິດຖົງໃຫ້ສົນຫຼັງເປີດແລ້ວ."}
               </p>
             </div>
           </div>

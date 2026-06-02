@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,10 +21,15 @@ import { useStore } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
 import {
   apiCreateOrder,
+  apiCreateOrderMultipart,
   apiGetShippingConfig,
   apiGetShippingQuote,
   isApiConfigured,
 } from "@/lib/api";
+import {
+  PaymentReceiptUpload,
+  type PaymentReceiptFile,
+} from "@/components/checkout/payment-receipt-upload";
 import type { ApiShippingQuote } from "@/lib/api-types";
 import { ProductImage } from "@/components/products/product-image";
 import {
@@ -54,6 +59,22 @@ export default function CheckoutPage() {
   const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
 
   const [paymentMethod, setPaymentMethod] = useState<"bcel" | "cod">("bcel");
+  const [paymentReceipt, setPaymentReceipt] = useState<PaymentReceiptFile | null>(
+    null
+  );
+
+  const clearPaymentReceipt = useCallback(() => {
+    setPaymentReceipt((prev) => {
+      if (prev?.previewUrl) URL.revokeObjectURL(prev.previewUrl);
+      return null;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (paymentReceipt?.previewUrl) URL.revokeObjectURL(paymentReceipt.previewUrl);
+    };
+  }, [paymentReceipt?.previewUrl]);
   const [freeShippingMin, setFreeShippingMin] = useState(500_000);
   const [defaultShippingFee, setDefaultShippingFee] = useState(30_000);
   const [shippingQuote, setShippingQuote] = useState<ApiShippingQuote | null>(
@@ -134,6 +155,13 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentSubmit = () => {
+    if (paymentMethod === "bcel" && !paymentReceipt) {
+      setOrderError(
+        "ກະລຸນາອັບໂຫຼດຫຼັກຖານການຊຳລະເງິນ (screenshot BCEL) ກ່ອນດຳເນີນການຕໍ່"
+      );
+      return;
+    }
+    setOrderError(null);
     setCurrentStep(3);
   };
 
@@ -156,23 +184,49 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === "bcel" && !paymentReceipt) {
+      setOrderError(
+        "ກະລຸນາອັບໂຫຼດຫຼັກຖານການຊຳລະເງິນ (screenshot BCEL)"
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     let orderNumber: string | undefined;
+    let paymentReceiptUrl: string | null = null;
 
     if (isApiConfigured()) {
       try {
-        const created = await apiCreateOrder({
-          items: orderItems,
-          shipping: {
-            recipient_name: shippingInfo.name.trim(),
-            phone: shippingInfo.phone.trim(),
-            province: "ນະຄອນຫຼວງວຽງຈັນ",
-            address_detail: shippingInfo.address.trim(),
-            latitude: deliveryLat!,
-            longitude: deliveryLng!,
-          },
-          payment_method: paymentMethod === "bcel" ? "bcel_qr" : "cod",
-          payment_receipt_url: "",
-        });
+        const shipping = {
+          recipient_name: shippingInfo.name.trim(),
+          phone: shippingInfo.phone.trim(),
+          province: "ນະຄອນຫຼວງວຽງຈັນ",
+          address_detail: shippingInfo.address.trim(),
+          latitude: deliveryLat!,
+          longitude: deliveryLng!,
+        };
+        const payment_method = paymentMethod === "bcel" ? "bcel_qr" : "cod";
+
+        const created =
+          paymentMethod === "bcel" && paymentReceipt
+            ? await apiCreateOrderMultipart({
+                items: orderItems,
+                shipping,
+                payment_method,
+                payment_receipt: paymentReceipt.file,
+              })
+            : await apiCreateOrder({
+                items: orderItems,
+                shipping,
+                payment_method,
+              });
+
+        paymentReceiptUrl =
+          typeof created.payment_receipt_url === "string" &&
+          created.payment_receipt_url.trim()
+            ? created.payment_receipt_url.trim()
+            : null;
+
         orderNumber =
           created.order_number?.trim() ||
           (created.id != null ? `ORD-${String(created.id).padStart(8, "0")}` : undefined);
@@ -205,6 +259,7 @@ export default function CheckoutPage() {
       paymentMethod: paymentMethod === "bcel" ? "bcel_qr" : "cod",
       status: "pending",
       totalLAK: totalAmount,
+      ...(paymentReceiptUrl ? { paymentReceiptUrl } : {}),
       ...(orderNumber ? { id: orderNumber } : {}),
     });
 
@@ -364,6 +419,7 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     {/* BCEL One */}
                     <button
+                      type="button"
                       onClick={() => setPaymentMethod("bcel")}
                       className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
                         paymentMethod === "bcel"
@@ -387,7 +443,12 @@ export default function CheckoutPage() {
 
                     {/* COD */}
                     <button
-                      onClick={() => setPaymentMethod("cod")}
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod("cod");
+                        clearPaymentReceipt();
+                        setOrderError(null);
+                      }}
                       className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
                         paymentMethod === "cod"
                           ? "border-primary bg-primary/5"
@@ -429,6 +490,13 @@ export default function CheckoutPage() {
                         <p className="text-lg font-bold text-primary mt-4">
                           {formatLAK(totalAmount)}
                         </p>
+                        <div className="mt-6 text-left">
+                          <PaymentReceiptUpload
+                            value={paymentReceipt}
+                            onChange={setPaymentReceipt}
+                            disabled={isSubmitting}
+                          />
+                        </div>
                       </motion.div>
                     )}
 
@@ -509,7 +577,26 @@ export default function CheckoutPage() {
                         ? "BCEL One QR Code"
                         : "ເກັບເງິນປາຍທາງ (COD)"}
                     </p>
+                    {paymentMethod === "bcel" && paymentReceipt && (
+                      <img
+                        src={paymentReceipt.previewUrl}
+                        alt="ຫຼັກຖານການຊຳລະ"
+                        className="mt-3 max-h-32 rounded-lg border border-border object-contain"
+                      />
+                    )}
                   </div>
+
+                  {paymentMethod === "bcel" && (
+                    <div className="mb-6 rounded-xl border border-border p-4">
+                      <PaymentReceiptUpload
+                        value={paymentReceipt}
+                        onChange={setPaymentReceipt}
+                        disabled={isSubmitting}
+                        compact
+                        id="payment-receipt-confirm"
+                      />
+                    </div>
+                  )}
 
                   {/* Order Items */}
                   <div className="mb-6">

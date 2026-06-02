@@ -393,7 +393,7 @@ export default function AdminProductsPage() {
         categoryLao: storeNameLao,
         stock,
         sourceUrl: newProduct.sourceUrl,
-        trustBadges: ["ຂອງແທ້ 100%", "ນຳເຂົ້າໂດຍກົງ"],
+        trustBadges: ["ຄຸນນະພາບດີ", "ສົ່ງໃນວຽງຈັນ"],
         isNew: true,
         isBestSeller: false,
       };
@@ -481,7 +481,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">ຈັດການສິນຄ້າ</h1>
           <p className="text-muted-foreground">
-            ເພີ່ມ ແລະ ຈັດການສິນຄ້າສຳລັບ Dropship
+            ເພີ່ມ ແລະ ຈັດການສິນຄ້າເຂົ້າສານ
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -519,11 +519,11 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="text-left p-4 font-medium text-sm">ສິນຄ້າ</th>
                 <th className="text-left p-4 font-medium text-sm">ໝວດໝູ່</th>
-                <th className="text-left p-4 font-medium text-sm">ລາຄາຕົ້ນ (CNY)</th>
+                <th className="text-left p-4 font-medium text-sm">ລາຄາຊື້ຕົ້ນທຶນ</th>
                 <th className="text-left p-4 font-medium text-sm">ລາຄາຂາຍ (LAK)</th>
                 <th className="text-left p-4 font-medium text-sm">ກຳໄລ %</th>
                 <th className="text-left p-4 font-medium text-sm">ສະຕ໋ອກ</th>
-                <th className="text-left p-4 font-medium text-sm">ແຫຼ່ງສິນຄ້າ</th>
+                <th className="text-left p-4 font-medium text-sm">ຜູ້ສະໜອງ</th>
                 <th className="text-right p-4 font-medium text-sm">ຈັດການ</th>
               </tr>
             </thead>
@@ -567,7 +567,7 @@ export default function AdminProductsPage() {
                           : "bg-green-100 text-green-600"
                       }`}
                     >
-                      {product.stock} ຊິ້ນ
+                      {product.stock} ຖົງ
                     </span>
                   </td>
                   <td className="p-4">
@@ -579,7 +579,7 @@ export default function AdminProductsPage() {
                         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        ໄປຫາແຫຼ່ງ
+                        ເບິ່ງຜູ້ສະໜອງ
                       </a>
                     )}
                   </td>
@@ -652,7 +652,7 @@ export default function AdminProductsPage() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, nameLao: e.target.value })
                   }
-                  placeholder="ເຊັ່ນ: ຄໍລາເຈນເປັບໄທດ໌"
+                  placeholder="ເຊັ່ນ: ເຂົ້າຈ້າວມະລິ"
                 />
               </div>
               <div>
@@ -664,7 +664,7 @@ export default function AdminProductsPage() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, name: e.target.value })
                   }
-                  placeholder="e.g., Collagen Peptide"
+                  placeholder="e.g., Jasmine Rice 25kg"
                 />
               </div>
               <div className="md:col-span-2">
@@ -682,7 +682,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
-                  ວິທີໃຊ້ (ລາວ)
+                  ວິທີເກັບຮັກສາ (ລາວ)
                 </label>
                 <textarea
                   value={newProduct.howToUseLao}
@@ -690,12 +690,12 @@ export default function AdminProductsPage() {
                     setNewProduct({ ...newProduct, howToUseLao: e.target.value })
                   }
                   className="w-full px-4 py-2 rounded-lg border border-input bg-background min-h-[60px]"
-                  placeholder="ວິທີໃຊ້ສິນຄ້າ..."
+                  placeholder="ເຊັ່ນ: ເກັບໃນບ່ອນແຫ້ງ ປິດຖົງໃຫ້ສົນ..."
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  ລາຄາຕົ້ນທຶນ (CNY)
+                  ລາຄາຊື້ຕົ້ນທຶນ (ຫຍວນ ¥)
                 </label>
                 <Input
                   type="number"
@@ -761,7 +761,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">
-                  ລິ້ງແຫຼ່ງສິນຄ້າ (1688/Taobao)
+                  ລິ້ງຜູ້ສະໜອງ / ສາງ (ທາງເລືອກ)
                 </label>
                 <Input
                   type="url"
@@ -769,7 +769,7 @@ export default function AdminProductsPage() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, sourceUrl: e.target.value })
                   }
-                  placeholder="https://1688.com/product/..."
+                  placeholder="https://..."
                 />
               </div>
               <div className="md:col-span-2">

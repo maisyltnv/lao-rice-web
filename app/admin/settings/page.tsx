@@ -45,7 +45,7 @@ const notificationItems = [
   {
     key: "lowStock",
     title: "ເຕືອນສິນຄ້າໃກ້ໝົດ",
-    description: "ເມື່ອສິນຄ້າເຫຼືອນ້ອຍກວ່າ 10 ຊິ້ນ",
+    description: "ເມື່ອສິນຄ້າເຫຼືອນ້ອຍກວ່າ 10 ຖົງ",
     icon: PackageCheck,
   },
   {
@@ -65,7 +65,7 @@ const quickLinks = [
   },
   {
     title: "ອັດຕາແລກປ່ຽນ",
-    description: "ປັບ CNY → LAK ແລະຄິດລາຄາໃໝ່",
+    description: "ປັບອັດຕາແລກປ່ຽນ ແລະຄິດລາຄາຂາຍໃໝ່",
     href: "/admin/currency",
     icon: Globe2,
   },
@@ -80,15 +80,15 @@ const quickLinks = [
 export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState({
-    shopName: "Lao Beauty & Health",
+    shopName: "ຮ້ານເຂົ້າສານ",
     phone: "020 5555 8888",
-    email: "support@laobeauty.health",
+    email: "info@laorice.la",
     province: "ນະຄອນຫຼວງວຽງຈັນ",
-    address: "ຖະໜົນລ້ານຊ້າງ, ເມືອງຈັນທະບູລີ",
+    address: "ຖະໜົນສາມແສນໄທ, ນະຄອນຫຼວງວຽງຈັນ",
     description:
-      "ຮ້ານສຸຂະພາບ ແລະຄວາມງາມ ນຳເຂົ້າສິນຄ້າຄຸນນະພາບ ພ້ອມບໍລິການຈັດສົ່ງທົ່ວລາວ.",
+      "ຂາຍເຂົ້າຈ້າວ ເຂົ້າໜຽວ ຄຸນນະພາບດີ — ສັ່ງອອນລາຍ ແລະ ຈັດສົ່ງພາຍໃນນະຄອນຫຼວງວຽງຈັນ.",
     bankName: "BCEL OnePay",
-    accountName: "LAO BEAUTY HEALTH",
+    accountName: "ຮ້ານເຂົ້າສານ",
     accountNumber: "010-12-00-99999999",
     shippingFee: "30000",
     freeShipping: "500000",
@@ -133,7 +133,7 @@ export default function AdminSettingsPage() {
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
-            Store Control Center
+            ຕັ້ງຄ່າຮ້ານເຂົ້າສານ
           </div>
           <h1 className="text-2xl font-bold text-foreground">ຕັ້ງຄ່າຮ້ານຄ້າ</h1>
           <p className="text-muted-foreground">
@@ -157,9 +157,9 @@ export default function AdminSettingsPage() {
                 <Building2 className="h-7 w-7" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-xl font-semibold">Lao Beauty & Health</h2>
+                <h2 className="text-xl font-semibold">ຮ້ານເຂົ້າສານ</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  ຕັ້ງຄ່າ profile ທີ່ຈະໃຊ້ຢູ່ໜ້າຮ້ານ, ໃບບິນ, ແລະຂໍ້ຄວາມຫາລູກຄ້າ.
+                  ຕັ້ງຄ່າຂໍ້ມູນຮ້ານ, ການຊຳລະ ແລະການຈັດສົ່ງສຳລັບລູກຄ້າ.
                 </p>
               </div>
             </div>

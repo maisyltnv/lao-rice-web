@@ -151,7 +151,7 @@ export default function CurrencyManagerPage() {
             ຈັດການອັດຕາແລກປ່ຽນ
           </h1>
           <p className="text-muted-foreground">
-            ປັບປຸງອັດຕາ CNY → LAK ຜ່ານ API — backend ຈະຄິດໄລ່ລາຄາສິນຄ້າທັງໝົດໃໝ່
+            ປັບອັດຕາແລກປ່ຽນຕົ້ນທຶນ → ລາຄາຂາຍ (LAK) — ລະບົບຈະຄິດລາຄາສິນຄ້າທັງໝົດໃໝ່
           </p>
           {updatedAt && (
             <p className="mt-1 text-xs text-muted-foreground">
@@ -185,14 +185,14 @@ export default function CurrencyManagerPage() {
             <div>
               <h2 className="text-lg font-semibold">ອັດຕາແລກປ່ຽນປະຈຸບັນ</h2>
               <p className="text-sm text-muted-foreground">
-                1 CNY (¥) = ? LAK (₭)
+                1 ຫຍວນ (¥) = ? ກີບ (₭)
               </p>
             </div>
           </motion.div>
 
           <div className="mb-6">
             <label className="mb-2 block text-sm font-medium">
-              ອັດຕາແລກປ່ຽນ (LAK ຕໍ່ 1 CNY)
+              ອັດຕາແລກປ່ຽນ (₭ ຕໍ່ 1 ¥)
             </label>
             <motion.div className="flex items-center gap-4">
               <div className="relative flex-1">
@@ -273,7 +273,7 @@ export default function CurrencyManagerPage() {
             </p>
             <div className="rounded-lg bg-muted/50 p-3 text-sm">
               <p className="font-mono">
-                ລາຄາຂາຍ (LAK) = ລາຄາຕົ້ນທຶນ (CNY) × ອັດຕາແລກປ່ຽນ × (1 + ກຳໄລ%)
+                ລາຄາຂາຍ (₭) = ລາຄາຊື້ຕົ້ນທຶນ (¥) × ອັດຕາແລກປ່ຽນ × (1 + ກຳໄລ%)
               </p>
             </div>
           </motion.div>
