@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { useAuth } from "@/lib/auth";
 import {
   LayoutDashboard,
@@ -15,7 +16,6 @@ import {
   Menu,
   X,
   ChevronRight,
-  Wheat,
   LogOut,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -138,9 +138,7 @@ export default function AdminLayout({
             >
               <div className="flex items-center justify-between h-16 px-4 border-b border-border">
                 <Link href="/" className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                    <Wheat className="h-4 w-4 text-primary-foreground" />
-                  </div>
+                  <BrandLogo size={32} />
                   <span className="font-bold">ແອັດມິນ</span>
                 </Link>
                 <button onClick={() => setIsSidebarOpen(false)}>
@@ -188,9 +186,7 @@ export default function AdminLayout({
         <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 bg-card border-r border-border">
           <div className="flex items-center gap-2 h-16 px-4 border-b border-border">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Wheat className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <BrandLogo size={32} />
               <span className="font-bold">ແອັດມິນ</span>
             </Link>
           </div>
