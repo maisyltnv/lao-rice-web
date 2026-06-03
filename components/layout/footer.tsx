@@ -69,6 +69,21 @@ export function Footer() {
                   ກ່ຽວກັບພວກເຮົາ
                 </Link>
               </li>
+              <li>
+                <Link href="/account" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  ບັນຊີຂອງຂ້ອຍ
+                </Link>
+              </li>
+              <li>
+                <Link href="/orders" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  ຄຳສັ່ງຊື້
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+                  ເຂົ້າລະບົບ
+                </Link>
+              </li>
             </ul>
           </div>
 

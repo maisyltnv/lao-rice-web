@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -49,6 +50,7 @@ export function LoginScreen({
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -211,19 +213,42 @@ export function LoginScreen({
             >
               ລະຫັດ
             </label>
-            <Input
-              type="password"
-              autoComplete={
-                mode === "login" || isAdmin
-                  ? "current-password"
-                  : "new-password"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className={cn(isAdmin && "border-slate-600 bg-slate-800 text-slate-50")}
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                autoComplete={
+                  mode === "login" || isAdmin
+                    ? "current-password"
+                    : "new-password"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className={cn(
+                  "pr-10",
+                  isAdmin && "border-slate-600 bg-slate-800 text-slate-50"
+                )}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className={cn(
+                  "absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 transition-colors",
+                  "text-muted-foreground hover:text-foreground",
+                  isAdmin &&
+                    "text-slate-400 hover:bg-slate-700 hover:text-slate-100"
+                )}
+                aria-label={showPassword ? "ຊ້ອນລະຫັດ" : "ເບິ່ງລະຫັດ"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" aria-hidden />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden />
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (

@@ -12,6 +12,7 @@ import type {
   ApiCreateProductBody,
   ApiExchangeRate,
   ApiLoginResponse,
+  ApiOtpSendResponse,
   ApiUpdateExchangeRateBody,
   ApiUpdateExchangeRateResponse,
   ApiOrder,
@@ -193,6 +194,27 @@ function readAccessToken(payload: unknown): string | null {
   return typeof token === "string" && token.length > 0 ? token : null;
 }
 
+function readApiError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data;
+    if (data && typeof data === "object" && "error" in data) {
+      const msg = (data as { error?: unknown }).error;
+      if (typeof msg === "string" && msg.length > 0) return msg;
+    }
+    if (err.response?.status === 404) {
+      return "API ບໍ່ມີເສັ້ນທາງນີ້ — ກະລຸນາ rebuild lao-rice-api (docker compose up -d --build)";
+    }
+    if (!err.response) {
+      const base = getApiBaseUrl();
+      if (!base) {
+        return "ບໍ່ພົບ NEXT_PUBLIC_API_URL — ກວດ .env.local";
+      }
+      return `ເຊື່ອມ API ບໍ່ໄດ້ (${base}) — ກວດວ່າ lao-rice-api ເປີດຢູ່`;
+    }
+  }
+  return fallback;
+}
+
 /** Customer login — POST /auth/login */
 export async function apiLogin(body: {
   username: string;
@@ -207,6 +229,39 @@ export async function apiLogin(body: {
     throw new Error("API ບໍ່ສົ່ງ access_token");
   }
   return { ...(data as ApiLoginResponse), access_token };
+}
+
+/** POST /auth/otp/send — request OTP for phone login */
+export async function apiSendOtp(phone: string): Promise<ApiOtpSendResponse> {
+  try {
+    const { data } = await publicClient.post<ApiOtpSendResponse>(
+      "/auth/otp/send",
+      { phone }
+    );
+    return data;
+  } catch (err) {
+    throw new Error(readApiError(err, "ສົ່ງ OTP ບໍ່ສຳເລັດ"));
+  }
+}
+
+/** POST /auth/otp/verify — verify OTP and receive JWT */
+export async function apiVerifyOtp(body: {
+  phone: string;
+  code: string;
+}): Promise<ApiLoginResponse> {
+  try {
+    const { data } = await publicClient.post<ApiLoginResponse>(
+      "/auth/otp/verify",
+      body
+    );
+    const access_token = readAccessToken(data);
+    if (!access_token) {
+      throw new Error("API ບໍ່ສົ່ງ access_token");
+    }
+    return { ...(data as ApiLoginResponse), access_token };
+  } catch (err) {
+    throw new Error(readApiError(err, "ລະຫັດ OTP ບໍ່ຖືກຕ້ອງ"));
+  }
 }
 
 /** Admin login — POST /auth/admin/login */
@@ -381,18 +436,32 @@ export async function apiAdminListOrders(params?: {
   return unwrapOrderList(data);
 }
 
-/** Customer account — GET /orders with customer JWT (own orders only). */
-export async function apiListOrders(params?: {
+/** Customer account — GET /orders/mine (JWT, own orders by user_id). */
+export async function apiListMyOrders(params?: {
+  page?: number;
   limit?: number;
-  offset?: number;
-}): Promise<ApiOrder[]> {
+}): Promise<ApiOrdersByPhoneResponse> {
   if (!getStoredAccessToken()) {
     throw new Error("missing bearer token");
   }
-  return fetchOrdersWithToken(getStoredAccessToken()!, {
-    limit: params?.limit ?? 50,
-    offset: params?.offset ?? 0,
+  const page = Math.max(1, params?.page ?? 1);
+  const limit = Math.min(
+    Math.max(1, params?.limit ?? ORDERS_BY_PHONE_PAGE_SIZE),
+    50
+  );
+  const { data } = await userClient.get<unknown>("/orders/mine", {
+    params: { page, limit },
   });
+  return parseOrdersByPhoneResponse(data, page, limit);
+}
+
+/** @deprecated Use [apiListMyOrders] — kept for callers expecting a flat list. */
+export async function apiListOrders(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<ApiOrder[]> {
+  const res = await apiListMyOrders(params);
+  return res.items;
 }
 
 /** Public — GET /ordersbyphone?phone=&page=&limit= (ບໍ່ຕ້ອງ Bearer token) */
@@ -454,11 +523,11 @@ export async function apiUpdateOrderStatus(
   return data;
 }
 
-/** Public — POST /orders (guest checkout, no login) */
+/** Authenticated — POST /orders (requires phone OTP login) */
 export async function apiCreateOrder(
   body: ApiCreateOrderBody
 ): Promise<ApiOrder> {
-  const { data } = await publicClient.post<ApiOrder>("/orders", body);
+  const { data } = await userClient.post<ApiOrder>("/orders", body);
   return data;
 }
 
@@ -469,7 +538,7 @@ export type ApiCreateOrderMultipartInput = {
   payment_receipt: File;
 };
 
-/** Public — POST /orders as multipart (BCEL QR + payment_receipt file, same as mobile app). */
+/** Authenticated — POST /orders as multipart (BCEL QR + payment_receipt file). */
 export async function apiCreateOrderMultipart(
   input: ApiCreateOrderMultipartInput
 ): Promise<ApiOrder> {
@@ -479,11 +548,15 @@ export async function apiCreateOrderMultipart(
   form.append("shipping", JSON.stringify(input.shipping));
   form.append("payment_receipt", input.payment_receipt, input.payment_receipt.name);
 
+  const token = getStoredAccessToken();
   const { data } = await axios.post<ApiOrder>(
     `${getApiBaseUrl()}/orders`,
     form,
     {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       timeout: 60_000,
     }
   );

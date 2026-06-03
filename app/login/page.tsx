@@ -1,20 +1,12 @@
 "use client";
 
-import { LoginScreen } from "@/components/auth/login-screen";
+import { Suspense } from "react";
+import { PhoneOtpLogin } from "@/components/auth/phone-otp-login";
 
 export default function CustomerLoginPage() {
   return (
-    <LoginScreen
-      portal="customer"
-      brandTitle="ເຂົ້າລະບົບລູກຄ້າ"
-      brandSubtitle="ສັ່ງເຂົ້າອອນລາຍ ແລະ ຕິດຕາມຄຳສັ່ງຊື້"
-      redirectIfAuthed="/"
-      redirectAfterAuth="/"
-      alternateHint={{
-        href: "/admin/login",
-        label: "ໄປໜ້າເຂົ້າແອັດມິນ",
-        description: "ທ່ານແມ່ນພະນັກງານຮ້ານ?",
-      }}
-    />
+    <Suspense fallback={<div className="min-h-screen bg-muted/40" />}>
+      <PhoneOtpLogin />
+    </Suspense>
   );
 }

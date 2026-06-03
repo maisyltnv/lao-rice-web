@@ -26,6 +26,8 @@ import {
   apiGetShippingQuote,
   isApiConfigured,
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { getCustomerPhone } from "@/lib/customer-account";
 import {
   PaymentReceiptUpload,
   type PaymentReceiptFile,
@@ -46,6 +48,7 @@ const steps = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartTotal, clearCart, addOrder } = useStore();
+  const { token, isReady, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -81,6 +84,20 @@ export default function CheckoutPage() {
     null
   );
   const [quoteLoading, setQuoteLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!token) {
+      router.replace(`/login?redirect=${encodeURIComponent("/checkout")}`);
+    }
+  }, [isReady, token, router]);
+
+  useEffect(() => {
+    const phone = getCustomerPhone(user);
+    if (phone && !shippingInfo.phone) {
+      setShippingInfo((s) => ({ ...s, phone }));
+    }
+  }, [user, shippingInfo.phone]);
 
   useEffect(() => {
     if (!isApiConfigured() || cart.length === 0) return;

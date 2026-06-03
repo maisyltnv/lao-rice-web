@@ -10,18 +10,17 @@ import {
   Menu,
   X,
   User,
-  Heart,
+  LogOut,
   Wheat,
   Package,
 } from "lucide-react";
-
-/** ຊ່ວຍເວລາ — ສະແດງເມນູ «ລູກຄ້າ» / ເຂົ້າລະບົບ */
-const SHOW_CUSTOMER_LOGIN = false;
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { OrderLookupDrawer } from "@/components/orders/order-lookup-drawer";
 import { ProductImage } from "@/components/products/product-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth";
+import { getCustomerPhone } from "@/lib/customer-account";
 import { useStore } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
 
@@ -34,6 +33,9 @@ export function Header() {
 
   const { cart, cartTotal, cartCount, removeFromCart, updateQuantity, categories } =
     useStore();
+  const { user, token, isReady, logout } = useAuth();
+  const customerPhone = getCustomerPhone(user);
+  const isSignedIn = Boolean(isReady && token);
 
   const submitSearch = (query: string) => {
     const q = query.trim();
@@ -121,29 +123,65 @@ export function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
-              {SHOW_CUSTOMER_LOGIN && (
+              {isSignedIn ? (
+                <>
+                  <Link
+                    href="/account"
+                    className="p-2 hover:text-primary transition-colors hidden sm:flex sm:items-center sm:gap-1.5 rounded-md"
+                    title="ບັນຊີຂອງຂ້ອຍ"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="text-sm font-medium max-w-[7rem] truncate hidden lg:inline">
+                      {customerPhone || "ບັນຊີ"}
+                    </span>
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className="p-2 hover:text-primary transition-colors hidden sm:flex sm:items-center sm:gap-1 rounded-md"
+                    title="ຄຳສັ່ງຊື້ຂອງຂ້ອຍ"
+                  >
+                    <Package className="h-5 w-5" />
+                    <span className="text-sm font-medium hidden lg:inline">
+                      ຄຳສັ່ງ
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="p-2 hover:text-primary transition-colors hidden md:block"
+                    title="ອອກຈາກລະບົບ"
+                    onClick={() => {
+                      logout();
+                      router.push("/");
+                    }}
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </>
+              ) : (
                 <Link
                   href="/login"
                   className="p-2 hover:text-primary transition-colors hidden sm:flex sm:items-center sm:gap-1.5 rounded-md"
-                  title="ເຂົ້າລະບົບລູກຄ້າ"
+                  title="ເຂົ້າລະບົບ"
                 >
                   <User className="h-5 w-5" />
-                  <span className="text-sm font-medium max-w-[7rem] truncate hidden lg:inline">
-                    ລູກຄ້າ
+                  <span className="text-sm font-medium hidden lg:inline">
+                    ເຂົ້າລະບົບ
                   </span>
                 </Link>
               )}
-              <button
-                type="button"
-                className="p-2 hover:text-primary transition-colors hidden sm:flex sm:items-center sm:gap-1 rounded-md"
-                onClick={() => setIsOrdersOpen(true)}
-                title="ຄົ້ນຫາຄຳສັ່ງຊື້"
-              >
-                <Package className="h-5 w-5" />
-                <span className="text-sm font-medium hidden lg:inline">
-                  ຄຳສັ່ງ
-                </span>
-              </button>
+              {!isSignedIn && (
+                <button
+                  type="button"
+                  className="p-2 hover:text-primary transition-colors hidden sm:flex sm:items-center sm:gap-1 rounded-md"
+                  onClick={() => setIsOrdersOpen(true)}
+                  title="ຄົ້ນຫາຄຳສັ່ງດ້ວຍເບີໂທ"
+                >
+                  <Package className="h-5 w-5" />
+                  <span className="text-sm font-medium hidden lg:inline">
+                    ຄົ້ນຄຳສັ່ງ
+                  </span>
+                </button>
+              )}
               {/* <Link href="/wishlist" className="p-2 hover:text-primary transition-colors hidden sm:block">
                 <Heart className="h-5 w-5" />
               </Link> */}
@@ -225,25 +263,59 @@ export function Header() {
                   >
                     ສິນຄ້າທັງໝົດ
                   </Link>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 py-2 font-medium w-full text-left"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      setIsOrdersOpen(true);
-                    }}
-                  >
-                    <Package className="h-4 w-4 text-primary" />
-                    ຄົ້ນຫາຄຳສັ່ງຊື້
-                  </button>
-                  {SHOW_CUSTOMER_LOGIN && (
-                    <Link
-                      href="/login"
-                      className="block py-2 font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      ເຂົ້າລະບົບລູກຄ້າ
-                    </Link>
+                  {isSignedIn ? (
+                    <>
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-2 py-2 font-medium border-b border-border"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4 text-primary" />
+                        ບັນຊີຂອງຂ້ອຍ
+                      </Link>
+                      <Link
+                        href="/orders"
+                        className="flex items-center gap-2 py-2 font-medium border-b border-border"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Package className="h-4 w-4 text-primary" />
+                        ຄຳສັ່ງຊື້
+                      </Link>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 py-2 font-medium w-full text-left text-destructive"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          logout();
+                          router.push("/");
+                        }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        ອອກຈາກລະບົບ
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="flex items-center gap-2 py-2 font-medium border-b border-border"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4 text-primary" />
+                        ເຂົ້າລະບົບ
+                      </Link>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 py-2 font-medium w-full text-left"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setIsOrdersOpen(true);
+                        }}
+                      >
+                        <Package className="h-4 w-4 text-primary" />
+                        ຄົ້ນຫາຄຳສັ່ງດ້ວຍເບີໂທ
+                      </button>
+                    </>
                   )}
                 </nav>
               </div>

@@ -102,8 +102,14 @@ export interface ApiAdminLoginResponse {
   user?: ApiUser;
 }
 
+export interface ApiOtpSendResponse {
+  message: string;
+  phone: string;
+}
+
 export interface ApiUser {
   username?: string;
+  phone?: string;
   role?: string;
   id?: number;
   [key: string]: unknown;
