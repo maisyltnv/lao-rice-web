@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,6 +23,11 @@ import {
 import { apiOrderToStoreOrder } from "@/lib/map-api-order";
 import { phonesMatch } from "@/lib/order-phone";
 import { formatLAK, formatDateLao } from "@/lib/format";
+import { useAuth } from "@/lib/auth";
+import {
+  getCustomerPhone,
+  getStoredCustomerPhone,
+} from "@/lib/customer-account";
 
 const statusLabel: Record<Order["status"], string> = {
   pending: "ລໍຖ້າ",
@@ -76,7 +81,14 @@ export function OrderLookupDrawer({
   onOpenChange,
 }: OrderLookupDrawerProps) {
   const { orders: localOrders } = useStore();
+  const { user, token } = useAuth();
   const [phone, setPhone] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const fromAccount = getCustomerPhone(user) || getStoredCustomerPhone() || "";
+    if (fromAccount) setPhone(fromAccount);
+  }, [open, user]);
   const [searchedPhone, setSearchedPhone] = useState("");
   const [results, setResults] = useState<Order[]>([]);
   const [pagination, setPagination] =
@@ -235,7 +247,9 @@ export function OrderLookupDrawer({
 
             <div className="p-4 border-b border-border shrink-0">
               <p className="text-sm text-muted-foreground mb-3">
-                ໃສ່ເບີໂທທີ່ໃຊ້ຕອນສັ່ງຊື້ ເພື່ອເບິ່ງສະຖານະຄຳສັ່ງ
+                {token
+                  ? "ຄົ້ນຫາຄຳສັ່ງດ້ວຍເບີໂທທີ່ຜູກກັບບັນຊີ (ຫຼືເບີທີ່ໃຊ້ຕອນສັ່ງຊື້)"
+                  : "ໃສ່ເບີໂທທີ່ໃຊ້ຕອນສັ່ງຊື້ ເພື່ອເບິ່ງສະຖານະຄຳສັ່ງ"}
               </p>
               <form onSubmit={handleSearch} className="flex gap-2">
                 <div className="relative flex-1">

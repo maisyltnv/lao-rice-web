@@ -17,11 +17,17 @@ import {
   apiMe,
   apiMeAdmin,
   apiRegister,
+  apiVerifyOtp,
   getStoredAccessToken,
   getStoredAdminAccessToken,
   setStoredAccessToken,
   setStoredAdminAccessToken,
 } from "@/lib/api";
+import {
+  clearStoredCustomerPhone,
+  getCustomerPhone,
+  setStoredCustomerPhone,
+} from "@/lib/customer-account";
 
 const ADMIN_USER_STORAGE_KEY = "hb_admin_user";
 
@@ -30,6 +36,7 @@ interface AuthContextValue {
   token: string | null;
   isReady: boolean;
   login: (username: string, password: string) => Promise<void>;
+  loginWithPhoneOtp: (phone: string, code: string) => Promise<void>;
   register: (
     username: string,
     password: string,
@@ -117,6 +124,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loginWithPhoneOtp = useCallback(async (phone: string, code: string) => {
+    const res = await apiVerifyOtp({ phone, code });
+    setStoredAccessToken(res.access_token);
+    setToken(res.access_token);
+    const trimmedPhone = phone.trim();
+    setStoredCustomerPhone(trimmedPhone);
+    if (res.user) {
+      setUser(res.user);
+      setStoredCustomerPhone(getCustomerPhone(res.user) || trimmedPhone);
+      return;
+    }
+    try {
+      const me = await apiMe();
+      setUser(me);
+      setStoredCustomerPhone(getCustomerPhone(me) || trimmedPhone);
+    } catch {
+      setUser({ username: trimmedPhone, phone: trimmedPhone });
+    }
+  }, []);
+
   const register = useCallback(
     async (username: string, password: string, role?: string) => {
       await apiRegister({ username, password, ...(role ? { role } : {}) });
@@ -129,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredAccessToken(null);
     setToken(null);
     setUser(null);
+    clearStoredCustomerPhone();
   }, []);
 
   const loginAdmin = useCallback(async (username: string, password: string) => {
@@ -185,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       isReady,
       login,
+      loginWithPhoneOtp,
       register,
       logout,
       refreshUser,
@@ -198,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token,
       isReady,
       login,
+      loginWithPhoneOtp,
       register,
       logout,
       refreshUser,
