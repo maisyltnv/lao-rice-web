@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, Phone, ShoppingCart, User } from "lucide-react";
+import { LogOut, Package, Phone, ShoppingCart, Truck, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { CustomerProfileForm } from "@/components/account/customer-profile-form";
 import { getCustomerPhone } from "@/lib/customer-account";
 import { useStore } from "@/lib/store";
 
@@ -57,7 +58,9 @@ export default function AccountPage() {
           </p>
         </div>
 
-        <div className="space-y-2">
+        <CustomerProfileForm />
+
+        <div className="space-y-2 mt-8">
           <Button variant="outline" className="w-full justify-start gap-2" asChild>
             <Link href="/orders">
               <Package className="h-4 w-4" />
@@ -69,6 +72,12 @@ export default function AccountPage() {
               <ShoppingCart className="h-4 w-4" />
               ກະຕ່າສິນຄ້າ
               {cartCount > 0 ? ` (${cartCount})` : ""}
+            </Link>
+          </Button>
+          <Button variant="outline" className="w-full justify-start gap-2" asChild>
+            <Link href="/shipping">
+              <Truck className="h-4 w-4" />
+              ການຈັດສົ່ງ ແລະ ຄ່າສົ່ງ
             </Link>
           </Button>
         </div>

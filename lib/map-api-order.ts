@@ -24,6 +24,14 @@ function readPaymentReceiptUrl(o: ApiOrder): string | null {
   return null;
 }
 
+function readItemImageUrl(item: ApiOrderItem): string {
+  const nested = item.product?.image_url;
+  if (typeof nested === "string" && nested.trim()) return nested.trim();
+  const flat = (item as Record<string, unknown>).image_url;
+  if (typeof flat === "string" && flat.trim()) return flat.trim();
+  return "";
+}
+
 function readItemSourceUrl(item: ApiOrderItem): string {
   const nested = item.product?.source_url;
   if (typeof nested === "string" && nested.trim()) return nested.trim();
@@ -39,11 +47,13 @@ function stubProduct(item: ApiOrderItem, productId: string): Product {
   const priceLAK =
     unitPrice > 0 ? unitPrice : qty > 0 ? lineTotal / qty : lineTotal;
   const sourceUrl = readItemSourceUrl(item);
+  const imageUrl = readItemImageUrl(item);
+  const nameLao = item.product_name ?? `ສິນຄ້າ #${productId}`;
 
   return {
     id: productId,
     name: item.product?.name ?? item.product_name ?? `Product ${productId}`,
-    nameLao: item.product_name ?? `ສິນຄ້າ #${productId}`,
+    nameLao,
     description: "",
     descriptionLao: "",
     howToUse: "",
@@ -51,7 +61,7 @@ function stubProduct(item: ApiOrderItem, productId: string): Product {
     priceCNY: 0,
     priceLAK: priceLAK,
     marginPercent: 0,
-    images: [],
+    images: imageUrl ? [imageUrl] : [],
     category: "",
     categoryLao: "",
     stock: 0,

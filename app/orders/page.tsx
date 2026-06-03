@@ -6,18 +6,15 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { apiListMyOrders, isApiConfigured, ORDERS_BY_PHONE_PAGE_SIZE } from "@/lib/api";
+import {
+  apiListCustomerOrders,
+  isApiConfigured,
+  ORDERS_BY_PHONE_PAGE_SIZE,
+} from "@/lib/api";
 import { getCustomerPhone } from "@/lib/customer-account";
-import { formatDateLao, formatLAK } from "@/lib/format";
 import { apiOrderToStoreOrder } from "@/lib/map-api-order";
 import type { Order } from "@/lib/store";
-
-const statusLabel: Record<Order["status"], string> = {
-  pending: "ລໍຖ້າ",
-  processing: "ກຳລັງດຳເນີນ",
-  shipped: "ສົ່ງແລ້ວ",
-  delivered: "ສຳເລັດ",
-};
+import { CustomerOrderCard } from "@/components/orders/customer-order-card";
 
 export default function MyOrdersPage() {
   const router = useRouter();
@@ -39,7 +36,8 @@ export default function MyOrdersPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await apiListMyOrders({
+        const res = await apiListCustomerOrders({
+          phone: phone ?? "",
           page: p,
           limit: ORDERS_BY_PHONE_PAGE_SIZE,
         });
@@ -59,7 +57,7 @@ export default function MyOrdersPage() {
         setLoading(false);
       }
     },
-    [token]
+    [token, phone]
   );
 
   useEffect(() => {
@@ -108,25 +106,8 @@ export default function MyOrdersPage() {
           )}
           <ul className="space-y-4">
             {results.map((order) => (
-              <li
-                key={order.id}
-                className="rounded-xl border border-border bg-card p-4 shadow-sm"
-              >
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <span className="font-semibold">{order.id}</span>
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted">
-                    {statusLabel[order.status]}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  {formatDateLao(order.createdAt)}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {formatLAK(order.total)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {order.items.length} ລາຍການ · {order.customerInfo.phone}
-                </p>
+              <li key={order.id}>
+                <CustomerOrderCard order={order} />
               </li>
             ))}
           </ul>

@@ -30,6 +30,7 @@ import type {
   ApiUpdateProductBody,
   ApiUser,
 } from "@/lib/api-types";
+import type { UpdateCustomerProfileBody } from "@/lib/customer-profile";
 
 const USER_TOKEN_KEY = "hb_access_token";
 const ADMIN_TOKEN_KEY = "hb_admin_access_token";
@@ -286,6 +287,47 @@ export async function apiMe(): Promise<ApiUser> {
   return data;
 }
 
+/** PUT /auth/me/profile — save default shipping for checkout prefill */
+export async function apiUpdateCustomerProfile(
+  body: UpdateCustomerProfileBody
+): Promise<ApiUser> {
+  try {
+    const { data } = await userClient.put<ApiUser>("/auth/me/profile", body);
+    return data;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      try {
+        const { data } = await userClient.post<ApiUser>(
+          "/auth/me/profile",
+          body
+        );
+        return data;
+      } catch (postErr) {
+        throw profileEndpointError(postErr);
+      }
+    }
+    throw profileEndpointError(err);
+  }
+}
+
+function profileEndpointError(err: unknown): Error {
+  if (axios.isAxiosError(err) && err.response?.status === 404) {
+    return new Error(
+      "API ຍັງບໍ່ມີຟັງຊັນບັນທຶກທີ່ຢູ່ (404) — ກະລຸນາ restart backend ດ້ວຍ code ລ່າສຸດ: docker compose up -d --build"
+    );
+  }
+  if (axios.isAxiosError(err)) {
+    const msg =
+      typeof err.response?.data === "object" &&
+      err.response.data !== null &&
+      "error" in err.response.data
+        ? String((err.response.data as { error: string }).error)
+        : err.message;
+    return new Error(msg || "ບັນທຶກບໍ່ສຳເລັດ");
+  }
+  return err instanceof Error ? err : new Error("ບັນທຶກບໍ່ສຳເລັດ");
+}
+
 /** Current admin (admin JWT) — GET /auth/admin/me */
 export async function apiMeAdmin(): Promise<ApiUser> {
   const { data } = await adminClient.get<ApiUser>("/auth/admin/me");
@@ -453,6 +495,29 @@ export async function apiListMyOrders(params?: {
     params: { page, limit },
   });
   return parseOrdersByPhoneResponse(data, page, limit);
+}
+
+/**
+ * Customer orders for web account — matches mobile app (GET /ordersbyphone by phone).
+ * Falls back to GET /orders/mine when phone is unavailable.
+ */
+export async function apiListCustomerOrders(params: {
+  phone: string;
+  page?: number;
+  limit?: number;
+}): Promise<ApiOrdersByPhoneResponse> {
+  const phone = params.phone.trim();
+  const page = Math.max(1, params?.page ?? 1);
+  const limit = Math.min(
+    Math.max(1, params?.limit ?? ORDERS_BY_PHONE_PAGE_SIZE),
+    50
+  );
+
+  if (phone) {
+    return apiLookupOrdersByPhone(phone, { page, limit });
+  }
+
+  return apiListMyOrders({ page, limit });
 }
 
 /** @deprecated Use [apiListMyOrders] — kept for callers expecting a flat list. */
