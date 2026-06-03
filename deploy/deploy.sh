@@ -35,6 +35,13 @@ PORT=${WEB_PORT}
 EOF
 
 echo "==> Install dependencies"
+# Avoid EACCES when ~/.npm was previously written by root (sudo npm).
+export NPM_CONFIG_CACHE="${APP_DIR}/.npm-cache"
+mkdir -p "$NPM_CONFIG_CACHE"
+if [ -d "${HOME}/.npm" ] && [ ! -w "${HOME}/.npm" ]; then
+  echo "WARN: fixing ownership on ${HOME}/.npm"
+  sudo chown -R "$(id -u):$(id -g)" "${HOME}/.npm" 2>/dev/null || true
+fi
 npm ci
 
 echo "==> Build Next.js"
