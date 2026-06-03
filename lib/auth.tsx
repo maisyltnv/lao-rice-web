@@ -17,6 +17,7 @@ import {
   apiMe,
   apiMeAdmin,
   apiRegister,
+  apiUpdateCustomerProfile,
   apiVerifyOtp,
   getStoredAccessToken,
   getStoredAdminAccessToken,
@@ -44,6 +45,9 @@ interface AuthContextValue {
   ) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  updateCustomerProfile: (
+    body: import("@/lib/customer-profile").UpdateCustomerProfileBody
+  ) => Promise<void>;
 
   adminUser: ApiUser | null;
   adminToken: string | null;
@@ -152,6 +156,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [login]
   );
 
+  const updateCustomerProfile = useCallback(
+    async (body: import("@/lib/customer-profile").UpdateCustomerProfileBody) => {
+      const updated = await apiUpdateCustomerProfile(body);
+      setUser(updated);
+      const phone =
+        getCustomerPhone(updated) ||
+        (typeof body.shipping_phone === "string"
+          ? body.shipping_phone.trim()
+          : "");
+      if (phone) setStoredCustomerPhone(phone);
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     setStoredAccessToken(null);
     setToken(null);
@@ -217,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       refreshUser,
+      updateCustomerProfile,
       adminUser,
       adminToken,
       loginAdmin,
@@ -231,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       refreshUser,
+      updateCustomerProfile,
       adminUser,
       adminToken,
       loginAdmin,

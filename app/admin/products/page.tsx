@@ -24,8 +24,17 @@ import {
   apiListCategories,
   apiListProducts,
   apiUpdateProduct,
+  apiUploadProductImage,
   isApiConfigured,
 } from "@/lib/api";
+import {
+  ProductImageField,
+  type ProductImageUploadValue,
+} from "@/components/admin/product-image-field";
+import {
+  imageSourceModeForUrl,
+  type ProductImageSourceMode,
+} from "@/lib/product-upload-image";
 import { apiProductToStoreProduct } from "@/lib/map-api-product";
 import type { ApiCategory } from "@/lib/api-types";
 import {
@@ -33,7 +42,6 @@ import {
   profitMarginToPercent,
 } from "@/lib/map-api-product";
 import {
-  IMAGE_URL_FIELD_HINT,
   IMAGE_VIEWER_PAGE_WARNING,
   PRODUCT_PLACEHOLDER_IMAGE,
   isImageViewerPageUrl,
@@ -73,6 +81,21 @@ export default function AdminProductsPage() {
     stock: "50",
     imageUrl: "",
   });
+  const [imageSourceMode, setImageSourceMode] =
+    useState<ProductImageSourceMode>("link");
+  const [imageUpload, setImageUpload] = useState<ProductImageUploadValue | null>(
+    null
+  );
+
+  const clearImageUpload = () => {
+    if (imageUpload?.previewUrl) URL.revokeObjectURL(imageUpload.previewUrl);
+    setImageUpload(null);
+  };
+
+  const resetImageFields = (url = "") => {
+    clearImageUpload();
+    setImageSourceMode(imageSourceModeForUrl(url));
+  };
 
   const rate = typeof exchangeRate === "number" && exchangeRate > 0 ? exchangeRate : 3500;
 
@@ -130,6 +153,7 @@ export default function AdminProductsPage() {
     apiCategories[0] ? String(apiCategories[0].id) : "";
 
   const closeModal = () => {
+    clearImageUpload();
     setIsModalOpen(false);
     setEditingProductId(null);
     setLoadingEditProduct(false);
@@ -152,6 +176,7 @@ export default function AdminProductsPage() {
       stock: "50",
       imageUrl: "",
     });
+    resetImageFields();
     setIsModalOpen(true);
   };
 
@@ -182,6 +207,7 @@ export default function AdminProductsPage() {
         stock: String(product.stock),
         imageUrl: product.images[0] ?? "",
       });
+      resetImageFields(product.images[0] ?? "");
     };
 
     if (isApiConfigured() && adminToken && /^\d+$/.test(product.id)) {
@@ -205,6 +231,7 @@ export default function AdminProductsPage() {
           imageUrl:
             api.image_url?.trim() || product.images[0] || "",
         });
+        resetImageFields(api.image_url?.trim() || product.images[0] || "");
       } catch {
         fillFromStore();
         setApiError(
@@ -249,6 +276,40 @@ export default function AdminProductsPage() {
   const displayProducts = searchResults ?? products;
   const resultCount = searchResults != null ? searchTotal : products.length;
 
+  const resolveImageUrlForSave = async (): Promise<string | null> => {
+    if (imageSourceMode === "link") {
+      const trimmed = newProduct.imageUrl.trim();
+      if (trimmed && isImageViewerPageUrl(trimmed)) {
+        setApiError(IMAGE_VIEWER_PAGE_WARNING);
+        return null;
+      }
+      return trimmed || PRODUCT_PLACEHOLDER_IMAGE;
+    }
+
+    if (imageUpload) {
+      if (!isApiConfigured() || !adminToken) {
+        setApiError(
+          "ອັບໂຫຼດຮູບຕ້ອງເຊື່ອມ API ແລະ ເຂົ້າສູ່ລະບົບແອັດມິນ — ໄປ /admin/login"
+        );
+        return null;
+      }
+      try {
+        return await apiUploadProductImage(imageUpload.file);
+      } catch (err) {
+        setApiError(
+          err instanceof Error
+            ? err.message
+            : "ອັບໂຫຼດຮູບບໍ່ສຳເລັດ"
+        );
+        return null;
+      }
+    }
+
+    const existing = newProduct.imageUrl.trim();
+    if (existing) return existing;
+    return PRODUCT_PLACEHOLDER_IMAGE;
+  };
+
   const handleSaveProduct = async () => {
     setApiError(null);
     const costLAK = parseLak(newProduct.costLAK);
@@ -282,6 +343,7 @@ export default function AdminProductsPage() {
         stock: "50",
         imageUrl: "",
       });
+      resetImageFields();
     };
 
     const afterApiSave = () => {
@@ -291,13 +353,8 @@ export default function AdminProductsPage() {
       setTimeout(() => setIsSaved(false), 2000);
     };
 
-    const trimmedImageUrl = newProduct.imageUrl.trim();
-    if (trimmedImageUrl && isImageViewerPageUrl(trimmedImageUrl)) {
-      setApiError(IMAGE_VIEWER_PAGE_WARNING);
-      return;
-    }
-
-    const imageUrlForApi = trimmedImageUrl || PRODUCT_PLACEHOLDER_IMAGE;
+    const imageUrlForApi = await resolveImageUrlForSave();
+    if (imageUrlForApi === null) return;
 
     if (editingProductId) {
       const finishLocalEdit = () => {
@@ -318,9 +375,7 @@ export default function AdminProductsPage() {
                   category: storeSlug,
                   categoryLao: storeNameLao,
                   stock,
-                  images: [
-                    newProduct.imageUrl.trim() || p.images[0] || imageUrlForApi,
-                  ],
+                  images: [imageUrlForApi],
                 }
               : p
           )
@@ -762,35 +817,18 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">ລິ້ງຮູບພາບ</label>
-                <Input
-                  type="url"
-                  value={newProduct.imageUrl}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, imageUrl: e.target.value })
+                <ProductImageField
+                  mode={imageSourceMode}
+                  onModeChange={setImageSourceMode}
+                  imageUrl={newProduct.imageUrl}
+                  onImageUrlChange={(url) =>
+                    setNewProduct({ ...newProduct, imageUrl: url })
                   }
-                  placeholder="https://cdn.example.com/photo.jpg"
+                  uploadValue={imageUpload}
+                  onUploadValueChange={setImageUpload}
+                  productName={newProduct.nameLao || newProduct.name}
+                  disabled={pendingAction || loadingEditProduct}
                 />
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  {IMAGE_URL_FIELD_HINT}
-                </p>
-                {newProduct.imageUrl.trim() &&
-                  isImageViewerPageUrl(newProduct.imageUrl) && (
-                    <p className="mt-1 text-xs text-destructive">
-                      {IMAGE_VIEWER_PAGE_WARNING}
-                    </p>
-                  )}
-                {newProduct.imageUrl.trim() &&
-                  !isImageViewerPageUrl(newProduct.imageUrl) && (
-                    <motion.div className="mt-2 h-24 w-24 overflow-hidden rounded-lg border border-border bg-muted">
-                      <ProductImage
-                        src={newProduct.imageUrl}
-                        alt="ຕົວຢ່າງຮູບ"
-                        productName={newProduct.nameLao || newProduct.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </motion.div>
-                  )}
               </div>
 
               {/* Preview */}

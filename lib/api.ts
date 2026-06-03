@@ -30,6 +30,7 @@ import type {
   ApiUpdateProductBody,
   ApiUser,
 } from "@/lib/api-types";
+import type { UpdateCustomerProfileBody } from "@/lib/customer-profile";
 
 const USER_TOKEN_KEY = "hb_access_token";
 const ADMIN_TOKEN_KEY = "hb_admin_access_token";
@@ -194,7 +195,7 @@ function readAccessToken(payload: unknown): string | null {
   return typeof token === "string" && token.length > 0 ? token : null;
 }
 
-function readApiError(err: unknown, fallback: string): string {
+export function getApiErrorMessage(err: unknown, fallback: string): string {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
     if (data && typeof data === "object" && "error" in data) {
@@ -202,7 +203,10 @@ function readApiError(err: unknown, fallback: string): string {
       if (typeof msg === "string" && msg.length > 0) return msg;
     }
     if (err.response?.status === 404) {
-      return "API ບໍ່ມີເສັ້ນທາງນີ້ — ກະລຸນາ rebuild lao-rice-api (docker compose up -d --build)";
+      return "API ຍັງເປັນເວີຊັນເກົ່າ (ບໍ່ມີອັບໂຫຼດຮູບ) — ກະລຸນາ rebuild lao-rice-api: docker compose up -d --build";
+    }
+    if (err.response?.status === 401) {
+      return "JWT ໝົດອາຍຸ ຫຼື ບໍ່ຖືກຕ້ອງ — ເຂົ້າສູ່ລະບົບແອັດມິນໃໝ່ທີ່ /admin/login";
     }
     if (!err.response) {
       const base = getApiBaseUrl();
@@ -240,7 +244,7 @@ export async function apiSendOtp(phone: string): Promise<ApiOtpSendResponse> {
     );
     return data;
   } catch (err) {
-    throw new Error(readApiError(err, "ສົ່ງ OTP ບໍ່ສຳເລັດ"));
+    throw new Error(getApiErrorMessage(err, "ສົ່ງ OTP ບໍ່ສຳເລັດ"));
   }
 }
 
@@ -260,7 +264,7 @@ export async function apiVerifyOtp(body: {
     }
     return { ...(data as ApiLoginResponse), access_token };
   } catch (err) {
-    throw new Error(readApiError(err, "ລະຫັດ OTP ບໍ່ຖືກຕ້ອງ"));
+    throw new Error(getApiErrorMessage(err, "ລະຫັດ OTP ບໍ່ຖືກຕ້ອງ"));
   }
 }
 
@@ -284,6 +288,47 @@ export async function apiAdminLogin(body: {
 export async function apiMe(): Promise<ApiUser> {
   const { data } = await userClient.get<ApiUser>("/auth/me");
   return data;
+}
+
+/** PUT /auth/me/profile — save default shipping for checkout prefill */
+export async function apiUpdateCustomerProfile(
+  body: UpdateCustomerProfileBody
+): Promise<ApiUser> {
+  try {
+    const { data } = await userClient.put<ApiUser>("/auth/me/profile", body);
+    return data;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      try {
+        const { data } = await userClient.post<ApiUser>(
+          "/auth/me/profile",
+          body
+        );
+        return data;
+      } catch (postErr) {
+        throw profileEndpointError(postErr);
+      }
+    }
+    throw profileEndpointError(err);
+  }
+}
+
+function profileEndpointError(err: unknown): Error {
+  if (axios.isAxiosError(err) && err.response?.status === 404) {
+    return new Error(
+      "API ຍັງບໍ່ມີຟັງຊັນບັນທຶກທີ່ຢູ່ (404) — ກະລຸນາ restart backend ດ້ວຍ code ລ່າສຸດ: docker compose up -d --build"
+    );
+  }
+  if (axios.isAxiosError(err)) {
+    const msg =
+      typeof err.response?.data === "object" &&
+      err.response.data !== null &&
+      "error" in err.response.data
+        ? String((err.response.data as { error: string }).error)
+        : err.message;
+    return new Error(msg || "ບັນທຶກບໍ່ສຳເລັດ");
+  }
+  return err instanceof Error ? err : new Error("ບັນທຶກບໍ່ສຳເລັດ");
 }
 
 /** Current admin (admin JWT) — GET /auth/admin/me */
@@ -344,6 +389,48 @@ export async function apiUpdateProduct(
 
 export async function apiDeleteProduct(id: number | string): Promise<void> {
   await adminClient.delete(`/products/${id}`);
+}
+
+export type ApiUploadProductImageResponse = {
+  image_url: string;
+};
+
+/** Admin JWT — POST /products/upload-image (multipart field: image) */
+export async function apiUploadProductImage(file: File): Promise<string> {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("ບໍ່ພົບ NEXT_PUBLIC_API_URL — ກວດ .env.local");
+  }
+  if (!getStoredAdminAccessToken()) {
+    throw new Error("ບໍ່ມີ JWT ແອັດມິນ — ໄປ /admin/login");
+  }
+
+  const form = new FormData();
+  form.append("image", file, file.name);
+
+  try {
+    const token = getStoredAdminAccessToken();
+    const { data } = await axios.post<ApiUploadProductImageResponse>(
+      `${base}/products/upload-image`,
+      form,
+      {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        timeout: 60_000,
+      }
+    );
+    const url = data.image_url?.trim();
+    if (!url) {
+      throw new Error("API ບໍ່ສົ່ງ image_url");
+    }
+    return url;
+  } catch (err) {
+    throw new Error(
+      getApiErrorMessage(err, "ອັບໂຫຼດຮູບບໍ່ສຳເລັດ")
+    );
+  }
 }
 
 /** Public — GET /categories */
@@ -453,6 +540,29 @@ export async function apiListMyOrders(params?: {
     params: { page, limit },
   });
   return parseOrdersByPhoneResponse(data, page, limit);
+}
+
+/**
+ * Customer orders for web account — matches mobile app (GET /ordersbyphone by phone).
+ * Falls back to GET /orders/mine when phone is unavailable.
+ */
+export async function apiListCustomerOrders(params: {
+  phone: string;
+  page?: number;
+  limit?: number;
+}): Promise<ApiOrdersByPhoneResponse> {
+  const phone = params.phone.trim();
+  const page = Math.max(1, params?.page ?? 1);
+  const limit = Math.min(
+    Math.max(1, params?.limit ?? ORDERS_BY_PHONE_PAGE_SIZE),
+    50
+  );
+
+  if (phone) {
+    return apiLookupOrdersByPhone(phone, { page, limit });
+  }
+
+  return apiListMyOrders({ page, limit });
 }
 
 /** @deprecated Use [apiListMyOrders] — kept for callers expecting a flat list. */

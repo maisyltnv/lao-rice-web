@@ -29,6 +29,10 @@ import {
 import { useAuth } from "@/lib/auth";
 import { getCustomerPhone } from "@/lib/customer-account";
 import {
+  getCustomerProfileFromUser,
+  profileToUpdateBody,
+} from "@/lib/customer-profile";
+import {
   PaymentReceiptUpload,
   type PaymentReceiptFile,
 } from "@/components/checkout/payment-receipt-upload";
@@ -48,7 +52,7 @@ const steps = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartTotal, clearCart, addOrder } = useStore();
-  const { token, isReady, user } = useAuth();
+  const { token, isReady, user, refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -93,11 +97,25 @@ export default function CheckoutPage() {
   }, [isReady, token, router]);
 
   useEffect(() => {
-    const phone = getCustomerPhone(user);
-    if (phone && !shippingInfo.phone) {
-      setShippingInfo((s) => ({ ...s, phone }));
+    if (!user) return;
+    const profile = getCustomerProfileFromUser(user);
+    const phone =
+      profile?.shippingPhone || getCustomerPhone(user) || "";
+    setShippingInfo((s) => ({
+      name: s.name || profile?.recipientName || "",
+      phone: s.phone || phone,
+      address: s.address || profile?.addressDetail || "",
+    }));
+    if (
+      deliveryLat == null &&
+      profile &&
+      profile.deliveryLatitude !== 0 &&
+      profile.deliveryLongitude !== 0
+    ) {
+      setDeliveryLat(profile.deliveryLatitude);
+      setDeliveryLng(profile.deliveryLongitude);
     }
-  }, [user, shippingInfo.phone]);
+  }, [user, deliveryLat]);
 
   useEffect(() => {
     if (!isApiConfigured() || cart.length === 0) return;
@@ -247,6 +265,12 @@ export default function CheckoutPage() {
         orderNumber =
           created.order_number?.trim() ||
           (created.id != null ? `ORD-${String(created.id).padStart(8, "0")}` : undefined);
+
+        try {
+          await refreshUser();
+        } catch {
+          /* API also saves profile on place order */
+        }
       } catch (err) {
         let detail = "ກວດວ່າ API ຮັນຢູ່ ແລະ restart ດ້ວຍ code ລ່າສຸດ (docker compose up -d --build)";
         if (axios.isAxiosError(err)) {

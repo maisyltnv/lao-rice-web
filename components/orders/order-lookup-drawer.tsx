@@ -22,19 +22,12 @@ import {
 } from "@/lib/api";
 import { apiOrderToStoreOrder } from "@/lib/map-api-order";
 import { phonesMatch } from "@/lib/order-phone";
-import { formatLAK, formatDateLao } from "@/lib/format";
+import { CustomerOrderCard } from "@/components/orders/customer-order-card";
 import { useAuth } from "@/lib/auth";
 import {
   getCustomerPhone,
   getStoredCustomerPhone,
 } from "@/lib/customer-account";
-
-const statusLabel: Record<Order["status"], string> = {
-  pending: "ລໍຖ້າ",
-  processing: "ກຳລັງດຳເນີນ",
-  shipped: "ສົ່ງແລ້ວ",
-  delivered: "ສຳເລັດ",
-};
 
 interface PaginationState {
   page: number;
@@ -303,56 +296,8 @@ export function OrderLookupDrawer({
               ) : (
                 <ul className="space-y-3">
                   {results.map((order) => (
-                    <li
-                      key={`${order.id}-${order.createdAt.getTime()}`}
-                      className="rounded-xl border border-border bg-muted/30 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <p className="font-semibold text-primary">
-                            {order.id}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatDateLao(order.createdAt)}
-                          </p>
-                        </div>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 shrink-0">
-                          {statusLabel[order.status]}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {order.customerInfo.name} · {order.customerInfo.phone}
-                      </p>
-                      <p className="text-sm mt-1">
-                        {order.items.length > 0
-                          ? `${order.items.reduce((s, i) => s + i.quantity, 0)} ລາຍການ · `
-                          : ""}
-                        <span className="font-bold text-primary">
-                          {formatLAK(order.totalLAK)}
-                        </span>
-                      </p>
-                      {order.items.length > 0 && (
-                        <ul className="mt-2 space-y-1 border-t border-border pt-2">
-                          {order.items.map((item, idx) => (
-                            <li
-                              key={`${item.product.id}-${idx}`}
-                              className="text-xs text-muted-foreground flex justify-between gap-2"
-                            >
-                              <span className="truncate">
-                                {item.product.nameLao} ×{item.quantity}
-                              </span>
-                              <span className="shrink-0">
-                                {formatLAK(
-                                  item.product.priceLAK * item.quantity
-                                )}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {order.paymentMethod}
-                      </p>
+                    <li key={`${order.id}-${order.createdAt.getTime()}`}>
+                      <CustomerOrderCard order={order} />
                     </li>
                   ))}
                 </ul>

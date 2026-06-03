@@ -108,10 +108,16 @@ export interface ApiOtpSendResponse {
 }
 
 export interface ApiUser {
+  id?: number;
   username?: string;
   phone?: string;
   role?: string;
-  id?: number;
+  recipient_name?: string;
+  shipping_phone?: string;
+  province?: string;
+  address_detail?: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
   [key: string]: unknown;
 }
 
@@ -188,7 +194,7 @@ export interface ApiOrderItem {
   unit_price_lak?: number;
   line_total_lak?: number;
   product_name?: string;
-  product?: Pick<ApiProduct, "id" | "source_url" | "name">;
+  product?: Pick<ApiProduct, "id" | "source_url" | "name" | "image_url">;
   [key: string]: unknown;
 }
 

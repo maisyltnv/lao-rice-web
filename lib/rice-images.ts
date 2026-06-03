@@ -1,3 +1,5 @@
+import { resolveApiAssetUrl } from "@/lib/resolve-api-asset-url";
+
 /** Local + fallback product images (Unsplash links in DB often 404). */
 
 const IMG = "/images/rice";
@@ -56,6 +58,9 @@ export function resolveProductImageUrl(
   const trimmed = url?.trim() ?? "";
   if (!trimmed || isBrokenRemoteImage(trimmed)) {
     return productName ? riceImageForProduct(productName) : RICE_PLACEHOLDER;
+  }
+  if (trimmed.startsWith("/uploads/")) {
+    return resolveApiAssetUrl(trimmed) ?? trimmed;
   }
   if (trimmed.startsWith("/")) return trimmed;
   return trimmed;
