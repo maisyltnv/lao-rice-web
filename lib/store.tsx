@@ -13,6 +13,7 @@ import {
   apiGetExchangeRate,
   apiListCategories,
   apiListProducts,
+  getApiBaseUrl,
   isApiConfigured,
 } from "@/lib/api";
 import { apiProductToStoreProduct } from "@/lib/map-api-product";
@@ -210,6 +211,17 @@ const mockProducts: Product[] = [
   },
 ];
 
+function apiConnectionErrorMessage(): string {
+  const base = getApiBaseUrl();
+  if (!base) {
+    return "ບໍ່ພົບ NEXT_PUBLIC_API_URL — ຕັ້ງໃນ .env.production ແລ້ວ build/deploy ໃໝ່";
+  }
+  if (/localhost|127\.0\.0\.1/i.test(base)) {
+    return `API ຊີ້ ${base} — browser ບໍ່ເຂົ້າເຖິງ VPS. ຕັ້ງ NEXT_PUBLIC_API_URL=http://IP_VPS:8081 ແລ້ວ bash deploy/deploy.sh`;
+  }
+  return `ເຊື່ອມ API ບໍ່ໄດ້ (${base}) — ກວດ lao-rice-api ແລະ ufw allow 8081`;
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [exchangeRate, setExchangeRate] = useState(3500); // CNY to LAK
@@ -263,9 +275,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const refreshProducts = useCallback(async () => {
     if (!isApiConfigured()) {
       setProducts(mockProducts);
-      setProductsError(
-        "ບໍ່ພົບ NEXT_PUBLIC_API_URL — ສະແດງຂໍ້ມູນຕົວຢ່າງ. ໃສ່ URL API ໃນໄຟລ໌ .env"
-      );
+      setProductsError(apiConnectionErrorMessage());
       setProductsLoading(false);
       return;
     }
@@ -286,7 +296,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {
       setProducts(mockProducts);
       setProductsError(
-        "ເຊື່ອມ API ບໍ່ສຳເລັດ — ສະແດງຂໍ້ມູນຕົວຢ່າງ. ກວດ Docker ແລະ URL ວ່າເປີດ http://localhost:8080 ຫຼືບໍ່"
+        `${apiConnectionErrorMessage()} — ສະແດງຂໍ້ມູນຕົວຢ່າງ`
       );
     } finally {
       setProductsLoading(false);
