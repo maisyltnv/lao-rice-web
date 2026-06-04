@@ -10,6 +10,9 @@ else
 fi
 GITHUB_KEY="${GITHUB_KEY:-${_DEPLOY_HOME}/.ssh/github_lao_rice_web}"
 API_URL="${NEXT_PUBLIC_API_URL:-http://62.171.159.75:8081}"
+case "$API_URL" in
+  *127.0.0.1*|*localhost*) API_URL="http://62.171.159.75:8081" ;;
+esac
 WEB_PORT="${PORT:-3000}"
 
 setup_git_ssh() {
@@ -67,6 +70,8 @@ EOF
 
 echo "==> Install dependencies and build"
 npm ci
+export NEXT_PUBLIC_API_URL="${API_URL}"
+export PORT="${WEB_PORT}"
 npm run build
 
 DEPLOY_USER="${SUDO_USER:-deploy}"

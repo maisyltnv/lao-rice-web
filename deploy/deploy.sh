@@ -44,8 +44,17 @@ if [ -d "${HOME}/.npm" ] && [ ! -w "${HOME}/.npm" ]; then
 fi
 npm ci
 
-echo "==> Build Next.js"
+echo "==> Build Next.js (NEXT_PUBLIC_API_URL=${API_URL})"
+export NEXT_PUBLIC_API_URL="${API_URL}"
+export PORT="${WEB_PORT}"
 npm run build
+
+if grep -rqE '127\.0\.0\.1|localhost:808' .next/static 2>/dev/null; then
+  echo "ERROR: Build still contains localhost API URL."
+  echo "  Fix .env.production then re-run deploy.sh"
+  grep -rhoE 'https?://(127\.0\.0\.1|localhost)[^"'\'' ]*' .next/static 2>/dev/null | sort -u | head -5 || true
+  exit 1
+fi
 
 echo "==> Restart service"
 sudo systemctl restart "$SERVICE"
