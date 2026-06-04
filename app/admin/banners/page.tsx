@@ -32,8 +32,17 @@ import {
   apiCreateBanner,
   apiUpdateBanner,
   apiDeleteBanner,
+  apiUploadBannerImage,
   isApiConfigured,
 } from "@/lib/api";
+import { BannerImage } from "@/components/banner/banner-image";
+import {
+  BannerImageField,
+} from "@/components/admin/banner-image-field";
+import type { ProductImageUploadValue } from "@/components/admin/product-image-field";
+import { bannerImageSourceModeForUrl } from "@/lib/banner-upload-image";
+import type { ProductImageSourceMode } from "@/lib/product-upload-image";
+import { IMAGE_VIEWER_PAGE_WARNING, isImageViewerPageUrl } from "@/lib/product-image";
 
 type FormState = {
   title: string;
@@ -80,6 +89,21 @@ export default function AdminBannersPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [imageSourceMode, setImageSourceMode] =
+    useState<ProductImageSourceMode>("link");
+  const [imageUpload, setImageUpload] = useState<ProductImageUploadValue | null>(
+    null
+  );
+
+  const clearImageUpload = () => {
+    if (imageUpload?.previewUrl) URL.revokeObjectURL(imageUpload.previewUrl);
+    setImageUpload(null);
+  };
+
+  const resetImageFields = (url = "") => {
+    clearImageUpload();
+    setImageSourceMode(bannerImageSourceModeForUrl(url));
+  };
 
   const loadBanners = useCallback(async () => {
     if (!isApiConfigured()) {
@@ -114,6 +138,7 @@ export default function AdminBannersPage() {
     setActionError(null);
     setEditingId(null);
     setForm(emptyForm());
+    resetImageFields();
     setDialogOpen(true);
   };
 
@@ -121,7 +146,47 @@ export default function AdminBannersPage() {
     setActionError(null);
     setEditingId(b.id);
     setForm(bannerToForm(b));
+    resetImageFields(b.image_url);
     setDialogOpen(true);
+  };
+
+  const resolveImageUrlForSave = async (): Promise<string | null> => {
+    if (imageSourceMode === "link") {
+      const trimmed = form.image_url.trim();
+      if (!trimmed) {
+        setActionError("ກະລຸນາໃສ່ URL ຮູບ");
+        return null;
+      }
+      if (isImageViewerPageUrl(trimmed)) {
+        setActionError(IMAGE_VIEWER_PAGE_WARNING);
+        return null;
+      }
+      return trimmed;
+    }
+
+    if (imageUpload) {
+      if (!isApiConfigured() || !adminToken) {
+        setActionError(
+          "ອັບໂຫຼດຮູບຕ້ອງເຊື່ອມ API ແລະ ເຂົ້າສູ່ລະບົບແອັດມິນ — ໄປ /admin/login"
+        );
+        return null;
+      }
+      try {
+        return await apiUploadBannerImage(imageUpload.file);
+      } catch (err) {
+        setActionError(
+          err instanceof Error
+            ? err.message
+            : "ອັບໂຫຼດຮູບ banner ບໍ່ສຳເລັດ"
+        );
+        return null;
+      }
+    }
+
+    const existing = form.image_url.trim();
+    if (existing) return existing;
+    setActionError("ກະລຸນາເລືອກຮູບ ຫຼື ວາງລິ້ງຮູບ");
+    return null;
   };
 
   const handleSubmit = async () => {
@@ -131,9 +196,8 @@ export default function AdminBannersPage() {
       return;
     }
     const title = form.title.trim();
-    const image_url = form.image_url.trim();
-    if (!title || !image_url) {
-      setActionError("ກະລຸນາໃສ່ຫົວຂໍ້ ແລະ URL ຮູບ");
+    if (!title) {
+      setActionError("ກະລຸນາໃສ່ຫົວຂໍ້");
       return;
     }
     const sort_order = parseInt(form.sort_order, 10);
@@ -142,24 +206,28 @@ export default function AdminBannersPage() {
       return;
     }
 
-    const body = {
-      title,
-      subtitle: form.subtitle.trim(),
-      description: form.description.trim(),
-      image_url,
-      cta_label: form.cta_label.trim(),
-      link_url: form.link_url.trim() || "/products",
-      sort_order,
-      is_active: form.is_active,
-    };
-
     setSaving(true);
     try {
+      const image_url = await resolveImageUrlForSave();
+      if (!image_url) return;
+
+      const body = {
+        title,
+        subtitle: form.subtitle.trim(),
+        description: form.description.trim(),
+        image_url,
+        cta_label: form.cta_label.trim(),
+        link_url: form.link_url.trim() || "/products",
+        sort_order,
+        is_active: form.is_active,
+      };
+
       if (editingId != null) {
         await apiUpdateBanner(editingId, body);
       } else {
         await apiCreateBanner(body);
       }
+      clearImageUpload();
       setDialogOpen(false);
       setEditingId(null);
       await loadBanners();
@@ -262,7 +330,7 @@ export default function AdminBannersPage() {
                 <TableRow key={b.id}>
                   <TableCell className="pl-4">
                     <div className="h-14 w-24 rounded-md overflow-hidden bg-muted">
-                      <img
+                      <BannerImage
                         src={b.image_url}
                         alt=""
                         className="h-full w-full object-cover"
@@ -317,7 +385,13 @@ export default function AdminBannersPage() {
         </Table>
       </motion.div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!open) clearImageUpload();
+          setDialogOpen(open);
+        }}
+      >
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -361,26 +435,17 @@ export default function AdminBannersPage() {
                 rows={2}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="banner-image">URL ຮູບ (image_url) *</Label>
-              <Input
-                id="banner-image"
-                value={form.image_url}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, image_url: e.target.value }))
-                }
-                placeholder="https://..."
-              />
-              {form.image_url.trim() ? (
-                <div className="mt-2 aspect-[2/1] rounded-lg overflow-hidden border border-border bg-muted">
-                  <img
-                    src={form.image_url.trim()}
-                    alt="preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ) : null}
-            </div>
+            <BannerImageField
+              mode={imageSourceMode}
+              onModeChange={setImageSourceMode}
+              imageUrl={form.image_url}
+              onImageUrlChange={(url) =>
+                setForm((f) => ({ ...f, image_url: url }))
+              }
+              uploadValue={imageUpload}
+              onUploadValueChange={setImageUpload}
+              disabled={saving}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="banner-cta">ປຸ່ມ (cta_label)</Label>

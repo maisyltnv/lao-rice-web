@@ -395,6 +395,48 @@ export type ApiUploadProductImageResponse = {
   image_url: string;
 };
 
+export type ApiUploadBannerImageResponse = {
+  image_url: string;
+};
+
+/** Admin JWT — POST /banners/upload-image (multipart field: image) */
+export async function apiUploadBannerImage(file: File): Promise<string> {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("ບໍ່ພົບ NEXT_PUBLIC_API_URL — ກວດ .env.local");
+  }
+  if (!getStoredAdminAccessToken()) {
+    throw new Error("ບໍ່ມີ JWT ແອັດມິນ — ໄປ /admin/login");
+  }
+
+  const form = new FormData();
+  form.append("image", file, file.name);
+
+  try {
+    const token = getStoredAdminAccessToken();
+    const { data } = await axios.post<ApiUploadBannerImageResponse>(
+      `${base}/banners/upload-image`,
+      form,
+      {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        timeout: 60_000,
+      }
+    );
+    const url = data.image_url?.trim();
+    if (!url) {
+      throw new Error("API ບໍ່ສົ່ງ image_url");
+    }
+    return url;
+  } catch (err) {
+    throw new Error(
+      getApiErrorMessage(err, "ອັບໂຫຼດຮູບ banner ບໍ່ສຳເລັດ")
+    );
+  }
+}
+
 /** Admin JWT — POST /products/upload-image (multipart field: image) */
 export async function apiUploadProductImage(file: File): Promise<string> {
   const base = getApiBaseUrl();

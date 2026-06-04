@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { ApiBanner } from "@/lib/api-types";
 import { apiListPublicBanners, isApiConfigured } from "@/lib/api";
-import { getBannerImageSrc } from "@/lib/banner-image-url";
+import { BannerImage } from "@/components/banner/banner-image";
 import { RICE_HERO_IMAGES } from "@/lib/rice-images";
 
 type HeroSlide = {
@@ -15,7 +15,7 @@ type HeroSlide = {
   titleLao: string;
   subtitleLao: string;
   descriptionLao: string;
-  image: string;
+  imageUrl: string;
   ctaLao: string;
   href: string;
 };
@@ -26,7 +26,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     titleLao: "ເຂົ້າສານຄຸນນະພາບດີ",
     subtitleLao: "ຈັດສົ່ງພາຍໃນນະຄອນຫຼວງວຽງຈັນ",
     descriptionLao: "ເຂົ້າຈ້າວ · ເຂົ້າໜຽວ · ສັ່ງອອນລາຍ ຮັບເຖິງບ້ານ",
-    image: RICE_HERO_IMAGES.field,
+    imageUrl: RICE_HERO_IMAGES.field,
     ctaLao: "ເລືອກຊື້ເຂົ້າ",
     href: "/products",
   },
@@ -35,7 +35,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     titleLao: "ເຂົ້າໜຽວ 25 ກິໂລ",
     subtitleLao: "ນາປີ · ນາແຊງ · ໄກ່ນ້ອຍ",
     descriptionLao: "ເລືອກຊະນິດທີ່ທ່ານມັກ ແລະ ກຳນົດຈຸດສົ່ງດ້ວຍແຜນທີ່",
-    image: RICE_HERO_IMAGES.grains,
+    imageUrl: RICE_HERO_IMAGES.grains,
     ctaLao: "ເບິ່ງສິນຄ້າ",
     href: "/products",
   },
@@ -44,7 +44,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     titleLao: "ເຂົ້າຈ້າວຫອມນຸ່ມ",
     subtitleLao: "ມະລິ · ເຈົ້າໄຮ່",
     descriptionLao: "ສົ່ງໄວ ຊຳລະ BCEL QR ຫຼື COD",
-    image: RICE_HERO_IMAGES.bowl,
+    imageUrl: RICE_HERO_IMAGES.bowl,
     ctaLao: "ສັ່ງເລີຍ",
     href: "/products",
   },
@@ -56,7 +56,7 @@ function bannerToSlide(b: ApiBanner): HeroSlide {
     titleLao: b.title,
     subtitleLao: b.subtitle ?? "",
     descriptionLao: b.description ?? "",
-    image: getBannerImageSrc(b.image_url),
+    imageUrl: b.image_url?.trim() || RICE_HERO_IMAGES.field,
     ctaLao: b.cta_label?.trim() || "ເບິ່ງເພີ່ມເຕີມ",
     href: b.link_url?.trim() || "/products",
   };
@@ -117,12 +117,10 @@ export function HeroSlider() {
           className="absolute inset-0"
         >
           <motion.div className="absolute inset-0">
-            <img
-              src={slide.image}
+            <BannerImage
+              src={slide.imageUrl}
               alt={slide.titleLao}
               className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent" />
           </motion.div>
