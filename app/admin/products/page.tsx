@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useStore, Product } from "@/lib/store";
-import { formatLAK, calculateSellingPrice } from "@/lib/format";
+import { formatLAK, formatLakAmount, formatLakInput, parseLakAmount, calculateSellingPrice } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
 import {
   apiCreateProduct,
@@ -99,11 +99,7 @@ export default function AdminProductsPage() {
 
   const rate = typeof exchangeRate === "number" && exchangeRate > 0 ? exchangeRate : 3500;
 
-  const parseLak = (value: string): number => {
-    const raw = value.replace(/[,\s₭]/g, "").trim();
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : NaN;
-  };
+  const parseLak = parseLakAmount;
 
   const costLakToCny = (costLak: number): number => {
     if (!Number.isFinite(costLak) || costLak <= 0) return NaN;
@@ -197,7 +193,7 @@ export default function AdminProductsPage() {
         descriptionLao: product.descriptionLao,
         howToUse: product.howToUse,
         howToUseLao: product.howToUseLao,
-        costLAK: String(Math.round((product.priceCNY || 0) * rate)),
+        costLAK: formatLakAmount(Math.round((product.priceCNY || 0) * rate)),
         marginPercent: String(product.marginPercent),
         category: cat
           ? String(cat.id)
@@ -224,7 +220,7 @@ export default function AdminProductsPage() {
           descriptionLao: api.description ?? "",
           howToUse: product.howToUse,
           howToUseLao: product.howToUseLao,
-          costLAK: String(costLak),
+          costLAK: formatLakAmount(costLak),
           marginPercent: String(marginPct),
           category: cid != null ? String(cid) : "",
           stock: String(typeof api.stock === "number" ? api.stock : product.stock),
@@ -750,10 +746,14 @@ export default function AdminProductsPage() {
                   ລາຄາຊື້ຕົ້ນທຶນ (₭)
                 </label>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={newProduct.costLAK}
                   onChange={(e) =>
-                    setNewProduct({ ...newProduct, costLAK: e.target.value })
+                    setNewProduct({
+                      ...newProduct,
+                      costLAK: formatLakInput(e.target.value),
+                    })
                   }
                   placeholder="0"
                 />
