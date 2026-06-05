@@ -49,7 +49,7 @@ import {
 import { ProductImage } from "@/components/products/product-image";
 
 export default function AdminProductsPage() {
-  const { products, setProducts, exchangeRate, refreshProducts } = useStore();
+  const { products, setProducts, refreshProducts } = useStore();
   const { adminToken } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[] | null>(null);
@@ -97,14 +97,7 @@ export default function AdminProductsPage() {
     setImageSourceMode(imageSourceModeForUrl(url));
   };
 
-  const rate = typeof exchangeRate === "number" && exchangeRate > 0 ? exchangeRate : 3500;
-
   const parseLak = parseLakAmount;
-
-  const costLakToCny = (costLak: number): number => {
-    if (!Number.isFinite(costLak) || costLak <= 0) return NaN;
-    return costLak / rate;
-  };
 
   const sellingLakFromCostLak = (costLak: number, marginPercent: number): number => {
     if (!Number.isFinite(costLak) || !Number.isFinite(marginPercent)) return 0;
@@ -193,7 +186,9 @@ export default function AdminProductsPage() {
         descriptionLao: product.descriptionLao,
         howToUse: product.howToUse,
         howToUseLao: product.howToUseLao,
-        costLAK: formatLakAmount(Math.round((product.priceCNY || 0) * rate)),
+        costLAK: formatLakAmount(
+          Math.round(product.priceLAK / (1 + product.marginPercent / 100))
+        ),
         marginPercent: String(product.marginPercent),
         category: cat
           ? String(cat.id)
@@ -212,7 +207,11 @@ export default function AdminProductsPage() {
         const api = await apiGetProduct(product.id);
         const cid = api.category_id ?? api.category?.id;
         const marginPct = profitMarginToPercent(api.profit_margin);
-        const costLak = Math.round((api.original_price_cny || 0) * rate);
+        const productRate =
+          typeof api.exchange_rate === "number" && api.exchange_rate > 0
+            ? api.exchange_rate
+            : 1;
+        const costLak = Math.round((api.original_price_cny || 0) * productRate);
         setNewProduct({
           name: product.name,
           nameLao: api.name,
@@ -314,9 +313,7 @@ export default function AdminProductsPage() {
 
     if (isNaN(costLAK) || isNaN(marginPercent) || isNaN(stock)) return;
     if (costLAK <= 0) return;
-    if (!Number.isFinite(rate) || rate <= 0) return;
-
-    const priceCNY = costLakToCny(costLAK);
+    const priceCNY = costLAK;
     if (isNaN(priceCNY) || priceCNY <= 0) return;
 
     const selectedCat = apiCategories.find(
@@ -420,7 +417,7 @@ export default function AdminProductsPage() {
           image_url: imageUrlForApi,
           category_id: selectedCat.id,
           original_price_cny: priceCNY,
-          exchange_rate: rate,
+          exchange_rate: 1,
           profit_margin: marginPercentToRatio(marginPercent),
           stock,
         });
@@ -497,7 +494,7 @@ export default function AdminProductsPage() {
         name: newProduct.nameLao || newProduct.name || "ສິນຄ້າ",
         category_id: selectedCat.id,
         original_price_cny: priceCNY,
-        exchange_rate: rate,
+        exchange_rate: 1,
         profit_margin: marginPercentToRatio(marginPercent),
         stock,
         description: newProduct.descriptionLao || newProduct.description || "",
@@ -612,7 +609,9 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="p-4 text-sm">{product.categoryLao}</td>
                   <td className="p-4 text-sm">
-                    {formatLAK(Math.round((product.priceCNY || 0) * rate))}
+                    {formatLAK(
+                      Math.round(product.priceLAK / (1 + product.marginPercent / 100))
+                    )}
                   </td>
                   <td className="p-4 text-sm font-medium text-primary">
                     {formatLAK(product.priceLAK)}

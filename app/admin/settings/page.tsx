@@ -7,7 +7,6 @@ import {
   Building2,
   Check,
   CreditCard,
-  Globe2,
   KeyRound,
   Lock,
   Mail,
@@ -62,12 +61,6 @@ const quickLinks = [
     description: "ເພີ່ມ, ແກ້ໄຂ ແລະກວດ stock",
     href: "/admin/products",
     icon: Store,
-  },
-  {
-    title: "ອັດຕາແລກປ່ຽນ",
-    description: "ປັບອັດຕາແລກປ່ຽນ ແລະຄິດລາຄາຂາຍໃໝ່",
-    href: "/admin/currency",
-    icon: Globe2,
   },
   {
     title: "ຄຳສັ່ງຊື້",
