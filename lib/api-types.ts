@@ -149,10 +149,21 @@ export interface ApiUpdateProductBody {
   source_url?: string;
 }
 
-/** GET /orders/shipping-config */
+/** GET /orders/shipping-config | GET /shop-settings */
 export interface ApiShippingConfig {
   shipping_fee_lak: number;
   free_shipping_min_subtotal_lak: number;
+  bcel_qr_enabled?: boolean;
+  cod_enabled?: boolean;
+  updated_at?: string;
+}
+
+/** PUT /shop-settings */
+export interface ApiUpdateShopSettingsBody {
+  shipping_fee_lak: number;
+  free_shipping_min_subtotal_lak: number;
+  bcel_qr_enabled: boolean;
+  cod_enabled: boolean;
 }
 
 /** GET /orders/shipping-quote */

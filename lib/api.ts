@@ -22,6 +22,7 @@ import type {
   ApiOrderStatus,
   ApiUpdateOrderStatusBody,
   ApiShippingConfig,
+  ApiUpdateShopSettingsBody,
   ApiShippingQuote,
   ApiProduct,
   ApiProductListParams,
@@ -522,6 +523,23 @@ export async function apiDeleteCategory(id: number): Promise<void> {
 export async function apiGetShippingConfig(): Promise<ApiShippingConfig> {
   const { data } = await publicClient.get<ApiShippingConfig>(
     "/orders/shipping-config"
+  );
+  return data;
+}
+
+/** Public — GET /shop-settings */
+export async function apiGetShopSettings(): Promise<ApiShippingConfig> {
+  const { data } = await publicClient.get<ApiShippingConfig>("/shop-settings");
+  return data;
+}
+
+/** Admin JWT — PUT /shop-settings */
+export async function apiUpdateShopSettings(
+  body: ApiUpdateShopSettingsBody
+): Promise<ApiShippingConfig> {
+  const { data } = await adminClient.put<ApiShippingConfig>(
+    "/shop-settings",
+    body
   );
   return data;
 }
