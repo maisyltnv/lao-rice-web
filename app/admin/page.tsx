@@ -5,7 +5,6 @@ import {
   DollarSign,
   Package,
   ShoppingCart,
-  TrendingUp,
   Users,
   ArrowUpRight,
   ArrowDownRight,
@@ -45,7 +44,7 @@ const stats = [
 ];
 
 export default function AdminDashboardPage() {
-  const { orders, products, exchangeRate } = useStore();
+  const { orders, products } = useStore();
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.totalLAK, 0);
   const pendingOrders = orders.filter((o) => o.status === "pending").length;
@@ -92,34 +91,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Info Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Exchange Rate Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-card border border-border rounded-xl p-6"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-secondary" />
-            </div>
-            <div>
-              <h3 className="font-semibold">ອັດຕາແລກປ່ຽນ</h3>
-              <p className="text-sm text-muted-foreground">ຕົ້ນທຶນ → ລາຄາຂາຍ</p>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-primary">
-            1 ¥ = {formatLAK(exchangeRate)}
-          </p>
-          <a
-            href="/admin/currency"
-            className="text-sm text-primary hover:underline mt-2 inline-block"
-          >
-            ແກ້ໄຂອັດຕາແລກປ່ຽນ →
-          </a>
-        </motion.div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Pending Orders Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
