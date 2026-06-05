@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { apiGetShopSettings, apiUpdateShopSettings, isApiConfigured } from "@/lib/api";
 
 const cardMotion = {
   initial: { opacity: 0, y: 16 },
@@ -72,6 +73,8 @@ const quickLinks = [
 
 export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     shopName: "ຮ້ານເຂົ້າສານ",
     phone: "020 5555 8888",
@@ -110,12 +113,58 @@ export default function AdminSettingsPage() {
     );
   }, [settings]);
 
+  useEffect(() => {
+    if (!isApiConfigured()) return;
+    void apiGetShopSettings()
+      .then((data) => {
+        setSettings((current) => ({
+          ...current,
+          shippingFee: String(Math.round(data.shipping_fee_lak || 0)),
+          freeShipping: String(Math.round(data.free_shipping_min_subtotal_lak || 0)),
+        }));
+      })
+      .catch(() => {
+        /* keep defaults */
+      });
+  }, []);
+
   const updateSetting = (key: keyof typeof settings, value: string | boolean) => {
     setSettings((current) => ({ ...current, [key]: value }));
     setSaved(false);
+    setSaveError(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaveError(null);
+    const shippingFee = Number.parseFloat(settings.shippingFee);
+    const freeShipping = Number.parseFloat(settings.freeShipping);
+    if (!Number.isFinite(shippingFee) || shippingFee < 0) {
+      setSaveError("ຄ່າສົ່ງບໍ່ຖືກຕ້ອງ");
+      return;
+    }
+    if (!Number.isFinite(freeShipping) || freeShipping < 0) {
+      setSaveError("ຍອດສົ່ງຟຣີບໍ່ຖືກຕ້ອງ");
+      return;
+    }
+
+    if (isApiConfigured()) {
+      setSaving(true);
+      try {
+        await apiUpdateShopSettings({
+          shipping_fee_lak: shippingFee,
+          free_shipping_min_subtotal_lak: freeShipping,
+          bcel_qr_enabled: true,
+          cod_enabled: true,
+        });
+      } catch {
+        setSaveError("ບັນທຶກຄ່າສົ່ງຜ່ານ API ບໍ່ສຳເລັດ");
+        setSaving(false);
+        return;
+      } finally {
+        setSaving(false);
+      }
+    }
+
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);
   };
@@ -133,9 +182,13 @@ export default function AdminSettingsPage() {
             ຈັດການຂໍ້ມູນຮ້ານ, ການຊຳລະເງິນ, ການຈັດສົ່ງ ແລະຄວາມປອດໄພ
           </p>
         </div>
-        <Button onClick={handleSave} className="w-full gap-2 sm:w-auto">
+        <Button
+          onClick={() => void handleSave()}
+          disabled={saving}
+          className="w-full gap-2 sm:w-auto"
+        >
           {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saved ? "ບັນທຶກແລ້ວ" : "ບັນທຶກການຕັ້ງຄ່າ"}
+          {saved ? "ບັນທຶກແລ້ວ" : saving ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກການຕັ້ງຄ່າ"}
         </Button>
       </div>
 
