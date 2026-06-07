@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { ImagePlus, Upload, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export const PAYMENT_RECEIPT_MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPT = "image/jpeg,image/png,image/webp";
@@ -16,8 +15,8 @@ type PaymentReceiptUploadProps = {
   value: PaymentReceiptFile | null;
   onChange: (value: PaymentReceiptFile | null) => void;
   disabled?: boolean;
-  compact?: boolean;
   id?: string;
+  compact?: boolean;
 };
 
 export function validatePaymentReceiptFile(file: File): string | null {
@@ -34,8 +33,8 @@ export function PaymentReceiptUpload({
   value,
   onChange,
   disabled = false,
-  compact = false,
   id = "payment-receipt-input",
+  compact = false,
 }: PaymentReceiptUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,11 +59,13 @@ export function PaymentReceiptUpload({
   };
 
   return (
-    <div className="space-y-2">
-      <p className="font-medium text-sm">ອັບໂຫຼດຫຼັກຖານການຊຳລະເງິນ *</p>
-      <p className="text-xs text-muted-foreground">
-        ອັບໂຫຼດ screenshot ຫຼັງຊຳລະຜ່ານ BCEL One (JPEG, PNG, WebP — ສູງສຸດ 5 MB)
-      </p>
+    <div className={compact ? "space-y-3" : "space-y-2"}>
+      <div>
+        <p className="font-medium text-sm">ອັບໂຫຼດຫຼັກຖານການຊຳລະເງິນ *</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          ອັບໂຫຼດ screenshot ຫຼັງຊຳລະຜ່ານ BCEL One (JPEG, PNG, WebP — ສູງສຸດ 5 MB)
+        </p>
+      </div>
 
       <input
         ref={inputRef}
@@ -79,47 +80,52 @@ export function PaymentReceiptUpload({
         }}
       />
 
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => inputRef.current?.click()}
-        className="w-full rounded-xl border-2 border-dashed border-border bg-muted/40 p-4 transition-colors hover:border-primary/40 hover:bg-muted/60 disabled:opacity-50"
-      >
-        {value ? (
-          <div className="space-y-3">
-            <img
-              src={value.previewUrl}
-              alt="ຫຼັກຖານການຊຳລະ"
-              className={`mx-auto max-w-full rounded-lg object-contain ${
-                compact ? "max-h-28" : "max-h-44"
+      {value ? (
+        <div
+          className={`relative aspect-[4/3] overflow-hidden rounded-xl bg-muted/40 ${
+            compact ? "w-full max-w-36" : "w-full max-w-40"
+          }`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value.previewUrl}
+            alt="ຫຼັກຖານການຊຳລະ"
+            className="h-full w-full object-contain"
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={handleClear}
+            aria-label="ລຶບຮູບ"
+            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 disabled:opacity-50"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          className={`rounded-xl border-2 border-dashed border-border bg-background/80 transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:opacity-50 ${
+            compact
+              ? "w-full max-w-sm p-3"
+              : "w-full p-4 bg-muted/40 hover:bg-muted/60"
+          }`}
+        >
+          <div className={compact ? "py-1 text-center" : "py-2 text-center"}>
+            <Upload
+              className={`text-muted-foreground mx-auto mb-2 opacity-70 ${
+                compact ? "h-8 w-8" : "h-10 w-10"
               }`}
             />
-            <p className="text-xs text-muted-foreground truncate">{value.file.name}</p>
-          </div>
-        ) : (
-          <div className="py-2 text-center">
-            <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-70" />
             <p className="text-sm font-medium text-primary">ກົດເພື່ອເລືອກຮູບ</p>
             <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
               <ImagePlus className="h-3.5 w-3.5" />
               ຈາກແກລເລີຍ ຫຼື ກ້ອງ
             </p>
           </div>
-        )}
-      </button>
-
-      {value && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={disabled}
-          onClick={handleClear}
-          className="text-muted-foreground"
-        >
-          <X className="h-4 w-4 mr-1" />
-          ລຶບຮູບ
-        </Button>
+        </button>
       )}
     </div>
   );

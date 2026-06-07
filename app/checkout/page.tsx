@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
 import {
@@ -470,98 +471,108 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <h2 className="text-2xl font-bold mb-6">ເລືອກວິທີຊຳລະເງິນ</h2>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {!bcelQrEnabled && !codEnabled && (
                       <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                         ຮ້ານປິດການຊຳລະຊົ່ວຄາວ — ກະລຸນາຕິດຕໍ່ຮ້ານ
                       </p>
                     )}
-                    {bcelQrEnabled && (
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("bcel")}
-                        className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
-                          paymentMethod === "bcel"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground/30"
-                        }`}
-                      >
-                        <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-                          <QrCode className="h-6 w-6" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium">BCEL One QR</p>
-                          <p className="text-sm text-muted-foreground">
-                            ສະແກນ QR Code ຈ່າຍຜ່ານ BCEL One
-                          </p>
-                        </div>
-                        {paymentMethod === "bcel" && (
-                          <CheckCircle className="h-5 w-5 text-primary ml-auto" />
-                        )}
-                      </button>
-                    )}
 
-                    {codEnabled && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentMethod("cod");
-                          clearPaymentReceipt();
-                          setOrderError(null);
-                        }}
-                        className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
-                          paymentMethod === "cod"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-muted-foreground/30"
-                        }`}
-                      >
-                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                          <Banknote className="h-6 w-6 text-secondary-foreground" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium">ເກັບເງິນປາຍທາງ (COD)</p>
-                          <p className="text-sm text-muted-foreground">
-                            ຈ່າຍເງິນເມື່ອໄດ້ຮັບສິນຄ້າ
-                          </p>
-                        </div>
-                        {paymentMethod === "cod" && (
-                          <CheckCircle className="h-5 w-5 text-primary ml-auto" />
-                        )}
-                      </button>
-                    )}
+                    <div className="space-y-3">
+                      {bcelQrEnabled && (
+                        <div
+                          className={`rounded-xl border-2 transition-colors overflow-hidden ${
+                            paymentMethod === "bcel"
+                              ? "border-primary bg-primary/5"
+                              : "border-border"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod("bcel")}
+                            className="w-full p-4 flex items-center gap-3 text-left hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="w-11 h-11 shrink-0 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                              <QrCode className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium">BCEL One QR</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                ສະແກນ QR Code ຈ່າຍຜ່ານ BCEL One
+                              </p>
+                            </div>
+                            {paymentMethod === "bcel" && (
+                              <CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+                            )}
+                          </button>
 
-                    {/* BCEL QR Preview */}
-                    {paymentMethod === "bcel" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="p-6 bg-muted rounded-xl text-center"
-                      >
-                        <p className="text-sm text-muted-foreground mb-4">
-                          ສະແກນ QR Code ເພື່ອຊຳລະເງິນ
-                        </p>
-                        <div className="w-48 h-48 bg-background border border-border rounded-xl mx-auto flex items-center justify-center">
-                          <div className="text-center">
-                            <QrCode className="h-16 w-16 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-xs text-muted-foreground">
-                              QR Code ຈະປະກົດຫຼັງຢືນຢັນຄຳສັ່ງ
+                          {paymentMethod === "bcel" && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="border-t border-primary/15 bg-background/60 px-4 pb-4 pt-3"
+                            >
+                              <div className="rounded-xl bg-muted/50 p-4 text-center space-y-3">
+                                <p className="text-sm text-muted-foreground">
+                                  ສະແກນ QR Code ເພື່ອຊຳລະເງິນ
+                                </p>
+                                <div className="mx-auto max-w-48 overflow-hidden rounded-lg border border-border bg-background p-2 shadow-sm">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src="/images/payment/bcel_lapnet_qr.png"
+                                    alt="BCEL One LAPNet QR"
+                                    className="w-full object-contain"
+                                  />
+                                </div>
+                                <p className="text-xl font-bold text-primary">
+                                  {formatLAK(totalAmount)}
+                                </p>
+                              </div>
+
+                              <Separator className="my-4" />
+
+                              <PaymentReceiptUpload
+                                value={paymentReceipt}
+                                onChange={setPaymentReceipt}
+                                disabled={isSubmitting}
+                                compact
+                              />
+                            </motion.div>
+                          )}
+                        </div>
+                      )}
+
+                      {codEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentMethod("cod");
+                            clearPaymentReceipt();
+                            setOrderError(null);
+                          }}
+                          className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-3 text-left ${
+                            paymentMethod === "cod"
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-muted-foreground/30 hover:bg-muted/20"
+                          }`}
+                        >
+                          <div className="w-11 h-11 shrink-0 bg-secondary rounded-lg flex items-center justify-center">
+                            <Banknote className="h-5 w-5 text-secondary-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">ເກັບເງິນປາຍທາງ (COD)</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              ຈ່າຍເງິນເມື່ອໄດ້ຮັບສິນຄ້າ
                             </p>
                           </div>
-                        </div>
-                        <p className="text-lg font-bold text-primary mt-4">
-                          {formatLAK(totalAmount)}
-                        </p>
-                        <div className="mt-6 text-left">
-                          <PaymentReceiptUpload
-                            value={paymentReceipt}
-                            onChange={setPaymentReceipt}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
+                          {paymentMethod === "cod" && (
+                            <CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+                          )}
+                        </button>
+                      )}
+                    </div>
 
-                    <div className="flex items-center gap-4 pt-4">
+                    <div className="flex items-center gap-3 pt-2">
                       <Button
                         variant="outline"
                         onClick={() => setCurrentStep(1)}
@@ -639,25 +650,16 @@ export default function CheckoutPage() {
                         : "ເກັບເງິນປາຍທາງ (COD)"}
                     </p>
                     {paymentMethod === "bcel" && paymentReceipt && (
-                      <img
-                        src={paymentReceipt.previewUrl}
-                        alt="ຫຼັກຖານການຊຳລະ"
-                        className="mt-3 max-h-32 rounded-lg border border-border object-contain"
-                      />
+                      <div className="relative mt-3 aspect-[4/3] w-full max-w-36 overflow-hidden rounded-lg bg-muted/40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={paymentReceipt.previewUrl}
+                          alt="ຫຼັກຖານການຊຳລະ"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     )}
                   </div>
-
-                  {paymentMethod === "bcel" && (
-                    <div className="mb-6 rounded-xl border border-border p-4">
-                      <PaymentReceiptUpload
-                        value={paymentReceipt}
-                        onChange={setPaymentReceipt}
-                        disabled={isSubmitting}
-                        compact
-                        id="payment-receipt-confirm"
-                      />
-                    </div>
-                  )}
 
                   {/* Order Items */}
                   <div className="mb-6">
