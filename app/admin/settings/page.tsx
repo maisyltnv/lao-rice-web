@@ -35,6 +35,12 @@ import {
   isApiConfigured,
 } from "@/lib/api";
 import type { ApiShopSettings } from "@/lib/api-types";
+import {
+  formatLAK,
+  formatLakAmount,
+  formatLakInput,
+  parseLakAmount,
+} from "@/lib/format";
 
 const notificationItems = [
   {
@@ -88,8 +94,8 @@ const emptySettings = (): SettingsState => ({
   bankName: "",
   accountName: "",
   accountNumber: "",
-  shippingFee: "0",
-  freeShipping: "0",
+  shippingFee: formatLakAmount(0),
+  freeShipping: formatLakAmount(0),
   bcelQrEnabled: true,
   codEnabled: true,
   newOrders: true,
@@ -111,8 +117,10 @@ function settingsFromApi(data: ApiShopSettings): SettingsState {
     bankName: data.bank_name ?? "",
     accountName: data.account_name ?? "",
     accountNumber: data.account_number ?? "",
-    shippingFee: String(Math.round(data.shipping_fee_lak || 0)),
-    freeShipping: String(Math.round(data.free_shipping_min_subtotal_lak || 0)),
+    shippingFee: formatLakAmount(Math.round(data.shipping_fee_lak || 0)),
+    freeShipping: formatLakAmount(
+      Math.round(data.free_shipping_min_subtotal_lak || 0)
+    ),
     bcelQrEnabled: data.bcel_qr_enabled ?? true,
     codEnabled: data.cod_enabled ?? true,
     newOrders: prefs?.new_orders ?? true,
@@ -181,10 +189,17 @@ export default function AdminSettingsPage() {
     setSaveError(null);
   };
 
+  const updateLakSetting = (
+    key: "shippingFee" | "freeShipping",
+    value: string
+  ) => {
+    updateSetting(key, formatLakInput(value));
+  };
+
   const handleSave = async () => {
     setSaveError(null);
-    const shippingFee = Number.parseFloat(settings.shippingFee);
-    const freeShipping = Number.parseFloat(settings.freeShipping);
+    const shippingFee = parseLakAmount(settings.shippingFee);
+    const freeShipping = parseLakAmount(settings.freeShipping);
     if (!Number.isFinite(shippingFee) || shippingFee < 0) {
       setSaveError("ຄ່າສົ່ງບໍ່ຖືກຕ້ອງ");
       return;
@@ -287,7 +302,7 @@ export default function AdminSettingsPage() {
         <div>
           <p className="text-muted-foreground">ຄ່າສົ່ງ</p>
           <p className="mt-0.5 font-semibold">
-            {Number(settings.shippingFee).toLocaleString()} ₭
+            {formatLAK(parseLakAmount(settings.shippingFee) || 0)}
           </p>
         </div>
       </div>
@@ -352,16 +367,18 @@ export default function AdminSettingsPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ຄ່າສົ່ງມາດຕະຖານ (LAK)" icon={Truck}>
             <Input
-              type="number"
+              inputMode="numeric"
               value={settings.shippingFee}
-              onChange={(e) => updateSetting("shippingFee", e.target.value)}
+              onChange={(e) => updateLakSetting("shippingFee", e.target.value)}
+              placeholder="0"
             />
           </Field>
           <Field label="ສົ່ງຟຣີເມື່ອຊື້ຄົບ (LAK)" icon={PackageCheck}>
             <Input
-              type="number"
+              inputMode="numeric"
               value={settings.freeShipping}
-              onChange={(e) => updateSetting("freeShipping", e.target.value)}
+              onChange={(e) => updateLakSetting("freeShipping", e.target.value)}
+              placeholder="0"
             />
           </Field>
         </div>

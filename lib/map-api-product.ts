@@ -17,8 +17,20 @@ function inferredFinalPriceLak(api: ApiProduct): number {
   return Math.round(original_price_cny * exchange_rate * (1 + profit_margin));
 }
 
+function apiProductImages(api: ApiProduct): string[] {
+  const raw =
+    api.image_urls?.map((u) => u?.trim()).filter((u): u is string => Boolean(u)) ??
+    [];
+  const unique = [...new Set(raw)];
+  if (unique.length > 0) {
+    return unique.map((u) => normalizeProductImageUrl(u, api.name));
+  }
+  return [normalizeProductImageUrl(api.image_url, api.name)];
+}
+
 export function apiProductToStoreProduct(api: ApiProduct): Product {
-  const img = normalizeProductImageUrl(api.image_url, api.name);
+  const images = apiProductImages(api);
+  const img = images[0];
   const nested = api.category;
   const slug =
     nested?.slug?.trim() ||
@@ -49,7 +61,7 @@ export function apiProductToStoreProduct(api: ApiProduct): Product {
     priceCNY: api.original_price_cny,
     priceLAK: priceLak,
     marginPercent: marginPct,
-    images: [img],
+    images,
     category: slug,
     categoryLao,
     stock: typeof api.stock === "number" && api.stock >= 0 ? api.stock : 0,

@@ -24,28 +24,22 @@ import {
   apiListCategories,
   apiListProducts,
   apiUpdateProduct,
-  apiUploadProductImage,
   isApiConfigured,
 } from "@/lib/api";
 import {
-  ProductImageField,
-  type ProductImageUploadValue,
-} from "@/components/admin/product-image-field";
-import {
-  imageSourceModeForUrl,
-  type ProductImageSourceMode,
-} from "@/lib/product-upload-image";
+  ProductImagesField,
+  createEmptyImageEntry,
+  imageEntriesFromUrls,
+  type ProductImageEntry,
+} from "@/components/admin/product-images-field";
 import { apiProductToStoreProduct } from "@/lib/map-api-product";
 import type { ApiCategory } from "@/lib/api-types";
 import {
   marginPercentToRatio,
   profitMarginToPercent,
 } from "@/lib/map-api-product";
-import {
-  IMAGE_VIEWER_PAGE_WARNING,
-  PRODUCT_PLACEHOLDER_IMAGE,
-  isImageViewerPageUrl,
-} from "@/lib/product-image";
+import { PRODUCT_PLACEHOLDER_IMAGE } from "@/lib/product-image";
+import { resolveProductImageEntriesForSave } from "@/lib/resolve-product-images";
 import { ProductImage } from "@/components/products/product-image";
 
 export default function AdminProductsPage() {
@@ -79,22 +73,18 @@ export default function AdminProductsPage() {
     /** ຄ່າເລືອກ = ApiCategory.id (string) */
     category: "",
     stock: "50",
-    imageUrl: "",
   });
-  const [imageSourceMode, setImageSourceMode] =
-    useState<ProductImageSourceMode>("link");
-  const [imageUpload, setImageUpload] = useState<ProductImageUploadValue | null>(
-    null
-  );
+  const [imageEntries, setImageEntries] = useState<ProductImageEntry[]>([
+    createEmptyImageEntry(),
+  ]);
 
-  const clearImageUpload = () => {
-    if (imageUpload?.previewUrl) URL.revokeObjectURL(imageUpload.previewUrl);
-    setImageUpload(null);
-  };
-
-  const resetImageFields = (url = "") => {
-    clearImageUpload();
-    setImageSourceMode(imageSourceModeForUrl(url));
+  const resetImageEntries = (urls: string[] = []) => {
+    setImageEntries((current) => {
+      for (const entry of current) {
+        if (entry.upload?.previewUrl) URL.revokeObjectURL(entry.upload.previewUrl);
+      }
+      return imageEntriesFromUrls(urls);
+    });
   };
 
   const parseLak = parseLakAmount;
@@ -142,7 +132,7 @@ export default function AdminProductsPage() {
     apiCategories[0] ? String(apiCategories[0].id) : "";
 
   const closeModal = () => {
-    clearImageUpload();
+    resetImageEntries();
     setIsModalOpen(false);
     setEditingProductId(null);
     setLoadingEditProduct(false);
@@ -163,9 +153,8 @@ export default function AdminProductsPage() {
       marginPercent: "50",
       category: getDefaultCategory(),
       stock: "50",
-      imageUrl: "",
     });
-    resetImageFields();
+    resetImageEntries();
     setIsModalOpen(true);
   };
 
@@ -196,9 +185,8 @@ export default function AdminProductsPage() {
             ? String(apiCategories[0].id)
             : "",
         stock: String(product.stock),
-        imageUrl: product.images[0] ?? "",
       });
-      resetImageFields(product.images[0] ?? "");
+      resetImageEntries(product.images);
     };
 
     if (isApiConfigured() && adminToken && /^\d+$/.test(product.id)) {
@@ -223,10 +211,11 @@ export default function AdminProductsPage() {
           marginPercent: String(marginPct),
           category: cid != null ? String(cid) : "",
           stock: String(typeof api.stock === "number" ? api.stock : product.stock),
-          imageUrl:
-            api.image_url?.trim() || product.images[0] || "",
         });
-        resetImageFields(api.image_url?.trim() || product.images[0] || "");
+        const gallery =
+          api.image_urls?.filter(Boolean) ??
+          (api.image_url?.trim() ? [api.image_url.trim()] : product.images);
+        resetImageEntries(gallery);
       } catch {
         fillFromStore();
         setApiError(
@@ -271,40 +260,6 @@ export default function AdminProductsPage() {
   const displayProducts = searchResults ?? products;
   const resultCount = searchResults != null ? searchTotal : products.length;
 
-  const resolveImageUrlForSave = async (): Promise<string | null> => {
-    if (imageSourceMode === "link") {
-      const trimmed = newProduct.imageUrl.trim();
-      if (trimmed && isImageViewerPageUrl(trimmed)) {
-        setApiError(IMAGE_VIEWER_PAGE_WARNING);
-        return null;
-      }
-      return trimmed || PRODUCT_PLACEHOLDER_IMAGE;
-    }
-
-    if (imageUpload) {
-      if (!isApiConfigured() || !adminToken) {
-        setApiError(
-          "ອັບໂຫຼດຮູບຕ້ອງເຊື່ອມ API ແລະ ເຂົ້າສູ່ລະບົບແອັດມິນ — ໄປ /admin/login"
-        );
-        return null;
-      }
-      try {
-        return await apiUploadProductImage(imageUpload.file);
-      } catch (err) {
-        setApiError(
-          err instanceof Error
-            ? err.message
-            : "ອັບໂຫຼດຮູບບໍ່ສຳເລັດ"
-        );
-        return null;
-      }
-    }
-
-    const existing = newProduct.imageUrl.trim();
-    if (existing) return existing;
-    return PRODUCT_PLACEHOLDER_IMAGE;
-  };
-
   const handleSaveProduct = async () => {
     setApiError(null);
     const costLAK = parseLak(newProduct.costLAK);
@@ -334,9 +289,8 @@ export default function AdminProductsPage() {
         marginPercent: "50",
         category: getDefaultCategory(),
         stock: "50",
-        imageUrl: "",
       });
-      resetImageFields();
+      resetImageEntries();
     };
 
     const afterApiSave = () => {
@@ -346,8 +300,17 @@ export default function AdminProductsPage() {
       setTimeout(() => setIsSaved(false), 2000);
     };
 
-    const imageUrlForApi = await resolveImageUrlForSave();
-    if (imageUrlForApi === null) return;
+    const imageResult = await resolveProductImageEntriesForSave(imageEntries, {
+      adminToken,
+      isApiConfigured: isApiConfigured(),
+      fallbackUrl: PRODUCT_PLACEHOLDER_IMAGE,
+    });
+    if ("error" in imageResult) {
+      setApiError(imageResult.error);
+      return;
+    }
+    const imageUrlsForApi = imageResult.urls;
+    const coverImageUrl = imageUrlsForApi[0] ?? PRODUCT_PLACEHOLDER_IMAGE;
 
     if (editingProductId) {
       const finishLocalEdit = () => {
@@ -368,7 +331,7 @@ export default function AdminProductsPage() {
                   category: storeSlug,
                   categoryLao: storeNameLao,
                   stock,
-                  images: [imageUrlForApi],
+                  images: imageUrlsForApi,
                 }
               : p
           )
@@ -414,7 +377,8 @@ export default function AdminProductsPage() {
           name: newProduct.nameLao || newProduct.name || "ສິນຄ້າ",
           description:
             newProduct.descriptionLao || newProduct.description || "",
-          image_url: imageUrlForApi,
+          image_url: coverImageUrl,
+          image_urls: imageUrlsForApi,
           category_id: selectedCat.id,
           original_price_cny: priceCNY,
           exchange_rate: 1,
@@ -445,7 +409,7 @@ export default function AdminProductsPage() {
         priceCNY,
         priceLAK: sellingLakFromCostLak(costLAK, marginPercent),
         marginPercent,
-        images: [imageUrlForApi],
+        images: imageUrlsForApi,
         category: storeSlug,
         categoryLao: storeNameLao,
         stock,
@@ -498,7 +462,8 @@ export default function AdminProductsPage() {
         profit_margin: marginPercentToRatio(marginPercent),
         stock,
         description: newProduct.descriptionLao || newProduct.description || "",
-        image_url: imageUrlForApi,
+        image_url: coverImageUrl,
+        image_urls: imageUrlsForApi,
       });
       await refreshProducts();
       afterApiSave();
@@ -813,15 +778,9 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="md:col-span-2">
-                <ProductImageField
-                  mode={imageSourceMode}
-                  onModeChange={setImageSourceMode}
-                  imageUrl={newProduct.imageUrl}
-                  onImageUrlChange={(url) =>
-                    setNewProduct({ ...newProduct, imageUrl: url })
-                  }
-                  uploadValue={imageUpload}
-                  onUploadValueChange={setImageUpload}
+                <ProductImagesField
+                  entries={imageEntries}
+                  onChange={setImageEntries}
                   productName={newProduct.nameLao || newProduct.name}
                   disabled={pendingAction || loadingEditProduct}
                 />

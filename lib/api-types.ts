@@ -59,6 +59,7 @@ export interface ApiProduct {
   name: string;
   description?: string;
   image_url?: string;
+  image_urls?: string[];
   category_id: number;
   /** Populated when API embeds category on product responses */
   category?: ApiCategory;
@@ -131,6 +132,7 @@ export interface ApiCreateProductBody {
   stock: number;
   description?: string;
   image_url?: string;
+  image_urls?: string[];
   source_url?: string;
 }
 
@@ -139,6 +141,7 @@ export interface ApiUpdateProductBody {
   name?: string;
   description?: string;
   image_url?: string;
+  image_urls?: string[];
   category_id?: number;
   clear_category?: boolean;
   original_price_cny?: number;
