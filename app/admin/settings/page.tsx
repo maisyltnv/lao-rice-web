@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Bell,
-  Building2,
   Check,
   CreditCard,
   KeyRound,
@@ -14,13 +13,14 @@ import {
   MessageCircle,
   PackageCheck,
   Phone,
+  QrCode,
   ReceiptText,
   Save,
   ShieldCheck,
-  Sparkles,
   Store,
   Truck,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,72 +28,108 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { apiGetShopSettings, apiUpdateShopSettings, isApiConfigured } from "@/lib/api";
-
-const cardMotion = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-};
+import {
+  apiGetShopSettings,
+  apiUpdateShopSettings,
+  getStoredAdminAccessToken,
+  isApiConfigured,
+} from "@/lib/api";
+import type { ApiShopSettings } from "@/lib/api-types";
 
 const notificationItems = [
   {
     key: "newOrders",
     title: "ແຈ້ງເຕືອນຄຳສັ່ງຊື້ໃໝ່",
-    description: "ສົ່ງສຽງ ແລະ notification ເມື່ອມີອໍເດີເຂົ້າ",
+    description: "ເມື່ອມີອໍເດີເຂົ້າ",
     icon: Bell,
   },
   {
     key: "lowStock",
     title: "ເຕືອນສິນຄ້າໃກ້ໝົດ",
-    description: "ເມື່ອສິນຄ້າເຫຼືອນ້ອຍກວ່າ 10 ຖົງ",
+    description: "ເຫຼືອນ້ອຍກວ່າ 10 ຖົງ",
     icon: PackageCheck,
   },
   {
     key: "dailySummary",
     title: "ສະຫຼຸບຍອດຂາຍປະຈຳວັນ",
-    description: "ສົ່ງ summary ໃຫ້ທຸກມື້ຕອນ 20:00",
+    description: "ສົ່ງທຸກມື້ຕອນ 20:00",
     icon: ReceiptText,
   },
-];
+] as const;
 
-const quickLinks = [
-  {
-    title: "ຈັດການສິນຄ້າ",
-    description: "ເພີ່ມ, ແກ້ໄຂ ແລະກວດ stock",
-    href: "/admin/products",
-    icon: Store,
-  },
-  {
-    title: "ຄຳສັ່ງຊື້",
-    description: "ກວດ payment, ສົ່ງຂອງ, ອັບເດດ status",
-    href: "/admin/orders",
-    icon: Truck,
-  },
-];
+type SettingsState = {
+  shopName: string;
+  phone: string;
+  email: string;
+  province: string;
+  address: string;
+  description: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  shippingFee: string;
+  freeShipping: string;
+  bcelQrEnabled: boolean;
+  codEnabled: boolean;
+  newOrders: boolean;
+  lowStock: boolean;
+  dailySummary: boolean;
+  twoFactor: boolean;
+  staffApproval: boolean;
+};
+
+const emptySettings = (): SettingsState => ({
+  shopName: "",
+  phone: "",
+  email: "",
+  province: "",
+  address: "",
+  description: "",
+  bankName: "",
+  accountName: "",
+  accountNumber: "",
+  shippingFee: "0",
+  freeShipping: "0",
+  bcelQrEnabled: true,
+  codEnabled: true,
+  newOrders: true,
+  lowStock: true,
+  dailySummary: false,
+  twoFactor: false,
+  staffApproval: true,
+});
+
+function settingsFromApi(data: ApiShopSettings): SettingsState {
+  const prefs = data.admin_prefs;
+  return {
+    shopName: data.shop_name ?? "",
+    phone: data.phone ?? "",
+    email: data.email ?? "",
+    province: data.province ?? "",
+    address: data.address ?? "",
+    description: data.description ?? "",
+    bankName: data.bank_name ?? "",
+    accountName: data.account_name ?? "",
+    accountNumber: data.account_number ?? "",
+    shippingFee: String(Math.round(data.shipping_fee_lak || 0)),
+    freeShipping: String(Math.round(data.free_shipping_min_subtotal_lak || 0)),
+    bcelQrEnabled: data.bcel_qr_enabled ?? true,
+    codEnabled: data.cod_enabled ?? true,
+    newOrders: prefs?.new_orders ?? true,
+    lowStock: prefs?.low_stock ?? true,
+    dailySummary: prefs?.daily_summary ?? false,
+    twoFactor: prefs?.two_factor ?? false,
+    staffApproval: prefs?.staff_approval ?? true,
+  };
+}
 
 export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    shopName: "ຮ້ານເຂົ້າສານ",
-    phone: "020 5555 8888",
-    email: "info@laorice.la",
-    province: "ນະຄອນຫຼວງວຽງຈັນ",
-    address: "ຖະໜົນສາມແສນໄທ, ນະຄອນຫຼວງວຽງຈັນ",
-    description:
-      "ຂາຍເຂົ້າຈ້າວ ເຂົ້າໜຽວ ຄຸນນະພາບດີ — ສັ່ງອອນລາຍ ແລະ ຈັດສົ່ງພາຍໃນນະຄອນຫຼວງວຽງຈັນ.",
-    bankName: "BCEL OnePay",
-    accountName: "ຮ້ານເຂົ້າສານ",
-    accountNumber: "010-12-00-99999999",
-    shippingFee: "30000",
-    freeShipping: "500000",
-    newOrders: true,
-    lowStock: true,
-    dailySummary: false,
-    twoFactor: false,
-    staffApproval: true,
-  });
+  const [settings, setSettings] = useState<SettingsState>(emptySettings);
 
   const completion = useMemo(() => {
     const required = [
@@ -113,22 +149,33 @@ export default function AdminSettingsPage() {
     );
   }, [settings]);
 
+  const paymentMethodsLabel = useMemo(() => {
+    const methods: string[] = [];
+    if (settings.bcelQrEnabled) methods.push("BCEL QR");
+    if (settings.codEnabled) methods.push("COD");
+    return methods.length > 0 ? methods.join(" + ") : "ປິດທັງໝົດ";
+  }, [settings.bcelQrEnabled, settings.codEnabled]);
+
   useEffect(() => {
-    if (!isApiConfigured()) return;
+    if (!isApiConfigured()) {
+      setLoading(false);
+      setLoadError("ບໍ່ພົບ NEXT_PUBLIC_API_URL — ກວດ .env.local");
+      return;
+    }
     void apiGetShopSettings()
       .then((data) => {
-        setSettings((current) => ({
-          ...current,
-          shippingFee: String(Math.round(data.shipping_fee_lak || 0)),
-          freeShipping: String(Math.round(data.free_shipping_min_subtotal_lak || 0)),
-        }));
+        setSettings(settingsFromApi(data));
+        setLoadError(null);
       })
       .catch(() => {
-        /* keep defaults */
+        setLoadError("ໂຫຼດການຕັ້ງຄ່າຈາກ API ບໍ່ສຳເລັດ");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
-  const updateSetting = (key: keyof typeof settings, value: string | boolean) => {
+  const updateSetting = (key: keyof SettingsState, value: string | boolean) => {
     setSettings((current) => ({ ...current, [key]: value }));
     setSaved(false);
     setSaveError(null);
@@ -146,169 +193,221 @@ export default function AdminSettingsPage() {
       setSaveError("ຍອດສົ່ງຟຣີບໍ່ຖືກຕ້ອງ");
       return;
     }
-
-    if (isApiConfigured()) {
-      setSaving(true);
-      try {
-        await apiUpdateShopSettings({
-          shipping_fee_lak: shippingFee,
-          free_shipping_min_subtotal_lak: freeShipping,
-          bcel_qr_enabled: true,
-          cod_enabled: true,
-        });
-      } catch {
-        setSaveError("ບັນທຶກຄ່າສົ່ງຜ່ານ API ບໍ່ສຳເລັດ");
-        setSaving(false);
-        return;
-      } finally {
-        setSaving(false);
-      }
+    if (!settings.bcelQrEnabled && !settings.codEnabled) {
+      setSaveError("ຕ້ອງເປີດຢ່າງໜ້ອຍ 1 ວິທີຊຳລະ");
+      return;
     }
 
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2200);
+    if (!isApiConfigured()) {
+      setSaveError("ບໍ່ພົບ NEXT_PUBLIC_API_URL — ກວດ .env.local");
+      return;
+    }
+    if (!getStoredAdminAccessToken()) {
+      setSaveError("ກະລຸນາເຂົ້າສູ່ລະບົບ admin ກ່ອນບັນທຶກ");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updated = await apiUpdateShopSettings({
+        shipping_fee_lak: shippingFee,
+        free_shipping_min_subtotal_lak: freeShipping,
+        bcel_qr_enabled: settings.bcelQrEnabled,
+        cod_enabled: settings.codEnabled,
+        shop_name: settings.shopName.trim(),
+        phone: settings.phone.trim(),
+        email: settings.email.trim(),
+        province: settings.province.trim(),
+        address: settings.address.trim(),
+        description: settings.description.trim(),
+        bank_name: settings.bankName.trim(),
+        account_name: settings.accountName.trim(),
+        account_number: settings.accountNumber.trim(),
+        admin_prefs: {
+          new_orders: settings.newOrders,
+          low_stock: settings.lowStock,
+          daily_summary: settings.dailySummary,
+          two_factor: settings.twoFactor,
+          staff_approval: settings.staffApproval,
+        },
+      });
+      setSettings(settingsFromApi(updated));
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2200);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "ບັນທຶກການຕັ້ງຄ່າຜ່ານ API ບໍ່ສຳເລັດ";
+      setSaveError(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mx-auto max-w-3xl space-y-6 pb-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            ຕັ້ງຄ່າຮ້ານເຂົ້າສານ
-          </div>
           <h1 className="text-2xl font-bold text-foreground">ຕັ້ງຄ່າຮ້ານຄ້າ</h1>
-          <p className="text-muted-foreground">
-            ຈັດການຂໍ້ມູນຮ້ານ, ການຊຳລະເງິນ, ການຈັດສົ່ງ ແລະຄວາມປອດໄພ
+          <p className="mt-1 text-sm text-muted-foreground">
+            ຂໍ້ມູນຮ້ານ · ການຈັດສົ່ງ · ການຊຳລະເງິນ
           </p>
         </div>
-        <Button
-          onClick={() => void handleSave()}
-          disabled={saving}
-          className="w-full gap-2 sm:w-auto"
-        >
-          {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saved ? "ບັນທຶກແລ້ວ" : saving ? "ກຳລັງບັນທຶກ..." : "ບັນທຶກການຕັ້ງຄ່າ"}
-        </Button>
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          {(loadError || saveError) && (
+            <p className="text-sm text-destructive">{saveError ?? loadError}</p>
+          )}
+          <Button
+            onClick={() => void handleSave()}
+            disabled={saving || loading}
+            className="gap-2"
+          >
+            {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {saved
+              ? "ບັນທຶກແລ້ວ"
+              : saving
+                ? "ກຳລັງບັນທຶກ..."
+                : loading
+                  ? "ກຳລັງໂຫຼດ..."
+                  : "ບັນທຶກການຕັ້ງຄ່າ"}
+          </Button>
+        </div>
       </div>
 
-      <motion.section
-        {...cardMotion}
-        className="overflow-hidden rounded-xl border border-border bg-card"
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 gap-3 rounded-xl border border-border bg-muted/30 p-3 text-center text-sm">
+        <div>
+          <p className="text-muted-foreground">ຂໍ້ມູນຮ້ານ</p>
+          <p className="mt-0.5 font-semibold">{completion}%</p>
+        </div>
+        <div className="border-x border-border">
+          <p className="text-muted-foreground">ການຊຳລະ</p>
+          <p className="mt-0.5 font-semibold">{paymentMethodsLabel}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">ຄ່າສົ່ງ</p>
+          <p className="mt-0.5 font-semibold">
+            {Number(settings.shippingFee).toLocaleString()} ₭
+          </p>
+        </div>
+      </div>
+
+      {/* 1. Shop info */}
+      <SettingsSection
+        icon={Store}
+        title="ຂໍ້ມູນຮ້ານ"
+        description="ຊື່, ທີ່ຢູ່ ແລະຂໍ້ມູນຕິດຕໍ່"
       >
-        <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <Building2 className="h-7 w-7" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-xl font-semibold">ຮ້ານເຂົ້າສານ</h2>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  ຕັ້ງຄ່າຂໍ້ມູນຮ້ານ, ການຊຳລະ ແລະການຈັດສົ່ງສຳລັບລູກຄ້າ.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <MetricCard label="Profile" value={`${completion}%`} />
-              <MetricCard label="Payment" value="BCEL" />
-              <MetricCard label="Shipping" value="Active" />
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="ຊື່ຮ້ານ" icon={Store}>
+            <Input
+              value={settings.shopName}
+              onChange={(e) => updateSetting("shopName", e.target.value)}
+            />
+          </Field>
+          <Field label="ແຂວງ" icon={MapPin}>
+            <Input
+              value={settings.province}
+              onChange={(e) => updateSetting("province", e.target.value)}
+            />
+          </Field>
+          <Field label="ເບີໂທ" icon={Phone}>
+            <Input
+              value={settings.phone}
+              onChange={(e) => updateSetting("phone", e.target.value)}
+            />
+          </Field>
+          <Field label="ອີເມວ" icon={Mail}>
+            <Input
+              value={settings.email}
+              onChange={(e) => updateSetting("email", e.target.value)}
+            />
+          </Field>
+          <div className="sm:col-span-2">
+            <Field label="ທີ່ຢູ່ຮ້ານ" icon={MapPin}>
+              <Input
+                value={settings.address}
+                onChange={(e) => updateSetting("address", e.target.value)}
+              />
+            </Field>
           </div>
-
-          <div className="border-t border-border bg-muted/40 p-6 lg:border-l lg:border-t-0">
-            <p className="mb-4 text-sm font-medium">ສະຖານະລະບົບ</p>
-            <div className="space-y-3">
-              <StatusLine label="API Backend" value="Online" />
-              <StatusLine label="Admin JWT" value="Protected" />
-              <StatusLine label="Database" value="Connected" />
-            </div>
+          <div className="sm:col-span-2">
+            <Field label="ຄຳອະທິບາຍຮ້ານ" icon={MessageCircle}>
+              <Textarea
+                value={settings.description}
+                onChange={(e) => updateSetting("description", e.target.value)}
+                className="min-h-20 resize-none"
+              />
+            </Field>
           </div>
         </div>
-      </motion.section>
+      </SettingsSection>
 
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.05 }}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          <SectionHeader
-            icon={Store}
-            title="ຂໍ້ມູນຮ້ານ"
-            description="ຂໍ້ມູນຫຼັກສຳລັບໃຫ້ລູກຄ້າຕິດຕໍ່ ແລະຈື່ຈຳ brand"
+      {/* 2. Shipping */}
+      <SettingsSection
+        icon={Truck}
+        title="ການຈັດສົ່ງ"
+        description="ຄ່າສົ່ງ ແລະຍອດສົ່ງຟຣີ"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="ຄ່າສົ່ງມາດຕະຖານ (LAK)" icon={Truck}>
+            <Input
+              type="number"
+              value={settings.shippingFee}
+              onChange={(e) => updateSetting("shippingFee", e.target.value)}
+            />
+          </Field>
+          <Field label="ສົ່ງຟຣີເມື່ອຊື້ຄົບ (LAK)" icon={PackageCheck}>
+            <Input
+              type="number"
+              value={settings.freeShipping}
+              onChange={(e) => updateSetting("freeShipping", e.target.value)}
+            />
+          </Field>
+        </div>
+      </SettingsSection>
+
+      {/* 3. Payment */}
+      <SettingsSection
+        icon={CreditCard}
+        title="ການຊຳລະເງິນ"
+        description="ເປີດ/ປິດວິທີຊຳລະ ແລະຂໍ້ມູນບັນຊີ"
+      >
+        <p className="text-sm font-medium text-foreground">ວິທີຊຳລະ</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <CompactToggle
+            icon={QrCode}
+            title="BCEL One QR"
+            description="ລູກຄ້າອັບໂຫຼດສລິບ"
+            checked={settings.bcelQrEnabled}
+            onCheckedChange={(value) => updateSetting("bcelQrEnabled", value)}
           />
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Field label="ຊື່ຮ້ານ" icon={Store}>
-              <Input
-                value={settings.shopName}
-                onChange={(e) => updateSetting("shopName", e.target.value)}
-              />
-            </Field>
-            <Field label="ແຂວງ" icon={MapPin}>
-              <Input
-                value={settings.province}
-                onChange={(e) => updateSetting("province", e.target.value)}
-              />
-            </Field>
-            <Field label="ເບີໂທ" icon={Phone}>
-              <Input
-                value={settings.phone}
-                onChange={(e) => updateSetting("phone", e.target.value)}
-              />
-            </Field>
-            <Field label="ອີເມວ" icon={Mail}>
-              <Input
-                value={settings.email}
-                onChange={(e) => updateSetting("email", e.target.value)}
-              />
-            </Field>
-            <div className="sm:col-span-2">
-              <Field label="ທີ່ຢູ່ຮ້ານ" icon={MapPin}>
-                <Input
-                  value={settings.address}
-                  onChange={(e) => updateSetting("address", e.target.value)}
-                />
-              </Field>
-            </div>
-            <div className="sm:col-span-2">
-              <Field label="ຄຳອະທິບາຍຮ້ານ" icon={MessageCircle}>
-                <Textarea
-                  value={settings.description}
-                  onChange={(e) => updateSetting("description", e.target.value)}
-                  className="min-h-24 resize-none"
-                />
-              </Field>
-            </div>
-          </div>
-        </motion.section>
-
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.1 }}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          <SectionHeader
-            icon={CreditCard}
-            title="ການຊຳລະເງິນ"
-            description="ຂໍ້ມູນບັນຊີທີ່ຈະໃຊ້ໃນ checkout ແລະ order confirmation"
+          <CompactToggle
+            icon={Wallet}
+            title="ເກັບເງິນປາຍທາງ (COD)"
+            description="ຈ່າຍເມື່ອຮັບສິນຄ້າ"
+            checked={settings.codEnabled}
+            onCheckedChange={(value) => updateSetting("codEnabled", value)}
           />
+        </div>
 
-          <div className="mt-6 space-y-4">
-            <Field label="ທະນາຄານ / Wallet" icon={CreditCard}>
-              <Input
-                value={settings.bankName}
-                onChange={(e) => updateSetting("bankName", e.target.value)}
-              />
-            </Field>
-            <Field label="ຊື່ບັນຊີ" icon={UserRound}>
-              <Input
-                value={settings.accountName}
-                onChange={(e) => updateSetting("accountName", e.target.value)}
-              />
-            </Field>
+        <Separator className="my-6" />
+
+        <p className="text-sm font-medium text-foreground">ບັນຊີຮັບເງິນ</p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <Field label="ທະນາຄານ / Wallet" icon={CreditCard}>
+            <Input
+              value={settings.bankName}
+              onChange={(e) => updateSetting("bankName", e.target.value)}
+            />
+          </Field>
+          <Field label="ຊື່ບັນຊີ" icon={UserRound}>
+            <Input
+              value={settings.accountName}
+              onChange={(e) => updateSetting("accountName", e.target.value)}
+            />
+          </Field>
+          <div className="sm:col-span-2">
             <Field label="ເລກບັນຊີ" icon={ReceiptText}>
               <Input
                 value={settings.accountNumber}
@@ -316,165 +415,80 @@ export default function AdminSettingsPage() {
               />
             </Field>
           </div>
+        </div>
+      </SettingsSection>
 
-          <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4">
-            <p className="text-sm font-medium text-primary">Preview ໃບບິນ</p>
-            <div className="mt-3 space-y-2 text-sm">
-              <PreviewLine label="ຮ້ານ" value={settings.shopName} />
-              <PreviewLine label="ຊຳລະຜ່ານ" value={settings.bankName} />
-              <PreviewLine label="ບັນຊີ" value={settings.accountName} />
-            </div>
-          </div>
-        </motion.section>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.15 }}
-          className="rounded-xl border border-border bg-card p-6 xl:col-span-2"
-        >
-          <SectionHeader
-            icon={Truck}
-            title="ການຈັດສົ່ງ"
-            description="ກຳນົດຄ່າສົ່ງ ແລະຍອດຂັ້ນຕ່ຳສຳລັບສົ່ງຟຣີ"
-          />
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Field label="ຄ່າສົ່ງມາດຕະຖານ (LAK)" icon={Truck}>
-              <Input
-                type="number"
-                value={settings.shippingFee}
-                onChange={(e) => updateSetting("shippingFee", e.target.value)}
-              />
-            </Field>
-            <Field label="ສົ່ງຟຣີເມື່ອຊື້ຄົບ (LAK)" icon={PackageCheck}>
-              <Input
-                type="number"
-                value={settings.freeShipping}
-                onChange={(e) => updateSetting("freeShipping", e.target.value)}
-              />
-            </Field>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <InfoPill title="ວິທີຈັດສົ່ງ" value="Delivery / Pickup" />
-            <InfoPill title="ເວລາຈັດສົ່ງ" value="1-3 ມື້" />
-            <InfoPill title="ພື້ນທີ່" value="ທົ່ວປະເທດ" />
-          </div>
-        </motion.section>
-
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.2 }}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          <SectionHeader
-            icon={ShieldCheck}
-            title="ຄວາມປອດໄພ"
-            description="ຄວບຄຸມການເຂົ້າໃຊ້ແອັດມິນ"
-          />
-
-          <div className="mt-6 space-y-4">
-            <ToggleLine
-              icon={KeyRound}
-              title="Two-factor login"
-              description="ເພີ່ມລະຫັດ OTP ຕອນ login"
-              checked={settings.twoFactor}
-              onCheckedChange={(value) => updateSetting("twoFactor", value)}
+      {/* 4. Notifications & security */}
+      <SettingsSection
+        icon={ShieldCheck}
+        title="ແຈ້ງເຕືອນ ແລະ ຄວາມປອດໄພ"
+        description="ການແຈ້ງເຕືອນ admin ແລະການເຂົ້າໃຊ້"
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          {notificationItems.map((item) => (
+            <CompactToggle
+              key={item.key}
+              icon={item.icon}
+              title={item.title}
+              description={item.description}
+              checked={Boolean(settings[item.key])}
+              onCheckedChange={(value) => updateSetting(item.key, value)}
             />
-            <ToggleLine
-              icon={Lock}
-              title="Staff approval"
-              description="ຕ້ອງໃຫ້ owner ອະນຸມັດ staff ໃໝ່"
-              checked={settings.staffApproval}
-              onCheckedChange={(value) => updateSetting("staffApproval", value)}
-            />
-          </div>
-        </motion.section>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.25 }}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          <SectionHeader
-            icon={Bell}
-            title="ການແຈ້ງເຕືອນ"
-            description="ເລືອກສິ່ງທີ່ admin ຄວນຮູ້ທັນທີ"
+          ))}
+          <CompactToggle
+            icon={KeyRound}
+            title="Two-factor login"
+            description="OTP ຕອນ login"
+            checked={settings.twoFactor}
+            onCheckedChange={(value) => updateSetting("twoFactor", value)}
           />
-
-          <div className="mt-6 space-y-4">
-            {notificationItems.map((item) => (
-              <ToggleLine
-                key={item.key}
-                icon={item.icon}
-                title={item.title}
-                description={item.description}
-                checked={Boolean(settings[item.key as keyof typeof settings])}
-                onCheckedChange={(value) =>
-                  updateSetting(item.key as keyof typeof settings, value)
-                }
-              />
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section
-          {...cardMotion}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          <SectionHeader
-            icon={Sparkles}
-            title="ທາງລັດຈັດການ"
-            description="ໄປຫາໜ້າສຳຄັນໃນ admin ໄດ້ໄວ"
+          <CompactToggle
+            icon={Lock}
+            title="Staff approval"
+            description="ອະນຸມັດ staff ໃໝ່"
+            checked={settings.staffApproval}
+            onCheckedChange={(value) => updateSetting("staffApproval", value)}
           />
+        </div>
+      </SettingsSection>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {quickLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="group rounded-xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                  <link.icon className="h-5 w-5" />
-                </div>
-                <p className="font-medium">{link.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {link.description}
-                </p>
-              </a>
-            ))}
-          </div>
-        </motion.section>
+      {/* Footer links */}
+      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <Link href="/admin/products" className="hover:text-foreground">
+          → ຈັດການສິນຄ້າ
+        </Link>
+        <Link href="/admin/orders" className="hover:text-foreground">
+          → ຄຳສັ່ງຊື້
+        </Link>
       </div>
     </div>
   );
 }
 
-function SectionHeader({
+function SettingsSection({
   icon: Icon,
   title,
   description,
+  children,
 }: {
   icon: typeof Store;
   title: string;
   description: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary/20 text-secondary-foreground">
-        <Icon className="h-5 w-5" />
+    <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      <div className="mb-5 flex items-center gap-3 border-b border-border pb-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-semibold leading-tight">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
       </div>
-      <div>
-        <h2 className="font-semibold">{title}</h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
-      </div>
-    </div>
+      {children}
+    </section>
   );
 }
 
@@ -488,9 +502,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <Label className="flex items-center gap-2 text-sm">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+    <div className="space-y-1.5">
+      <Label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
         {label}
       </Label>
       {children}
@@ -498,46 +512,7 @@ function Field({
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-background p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function StatusLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-background px-3 py-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="inline-flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400">
-        <span className="h-2 w-2 rounded-full bg-green-500" />
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function PreviewLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="truncate font-medium">{value || "—"}</span>
-    </div>
-  );
-}
-
-function InfoPill({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-muted/40 p-4">
-      <p className="text-xs text-muted-foreground">{title}</p>
-      <p className="mt-1 font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function ToggleLine({
+function CompactToggle({
   icon: Icon,
   title,
   description,
@@ -551,23 +526,15 @@ function ToggleLine({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-background p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Icon className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium">{title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          </div>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <Icon className="h-4 w-4 shrink-0 text-primary" />
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-tight">{title}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
-        <Switch checked={checked} onCheckedChange={onCheckedChange} />
       </div>
-      <Separator className="my-3" />
-      <p className="text-xs text-muted-foreground">
-        {checked ? "ເປີດໃຊ້ງານຢູ່" : "ປິດໃຊ້ງານຢູ່"}
-      </p>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }

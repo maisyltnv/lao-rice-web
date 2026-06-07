@@ -537,9 +537,6 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">ຈັດການສິນຄ້າ</h1>
-          <p className="text-muted-foreground">
-            ເພີ່ມ ແລະ ຈັດການສິນຄ້າເຂົ້າສານ
-          </p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="h-4 w-4 mr-2" />
@@ -564,7 +561,7 @@ export default function AdminProductsPage() {
             ? "ກຳລັງຄົ້ນຫາ..."
             : searchQuery.trim()
               ? `ພົບ ${resultCount} ສິນຄ້າ`
-              : `${resultCount} ສິນຄ້າທັງໝົດ`}
+              : `ສິນຄ້າທັງໝົດ: ${resultCount} `}
         </p>
       </div>
 

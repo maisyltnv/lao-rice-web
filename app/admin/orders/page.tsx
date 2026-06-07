@@ -29,6 +29,7 @@ import {
 } from "@/lib/api";
 import { apiOrderToStoreOrder } from "@/lib/map-api-order";
 import { PaymentReceiptPreview } from "@/components/orders/payment-receipt-preview";
+import { ProductImage } from "@/components/products/product-image";
 
 const statusOptions = [
   { id: "all", label: "ທັງໝົດ" },
@@ -239,9 +240,6 @@ export default function AdminOrdersPage() {
       <motion.div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <motion.div>
           <h1 className="text-2xl font-bold text-foreground">ຈັດການຄຳສັ່ງຊື້</h1>
-          <p className="text-muted-foreground">
-            GET /orders (admin JWT) · ລູກຄ້າຄົ້ນຫາດ້ວຍ GET /ordersbyphone
-          </p>
         </motion.div>
         <Button
           variant="outline"
@@ -513,9 +511,12 @@ export default function AdminOrdersPage() {
                           key={`${item.product.id}-${idx}`}
                           className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
                         >
-                          <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                            <Package className="h-6 w-6 text-muted-foreground" />
-                          </div>
+                          <ProductImage
+                            src={item.product.images[0]}
+                            alt={item.product.nameLao}
+                            productName={item.product.nameLao}
+                            className="w-14 h-14 rounded-lg object-cover shrink-0 bg-muted"
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">
                               {item.product.nameLao}

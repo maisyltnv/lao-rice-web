@@ -276,9 +276,6 @@ export default function AdminBannersPage() {
           <h1 className="text-2xl font-bold text-foreground">
             ແບນເນີ Hero (Slider)
           </h1>
-          <p className="text-muted-foreground">
-            ຈັດການ slide ໜ້າຫຼັກ — GET/POST/PUT/DELETE /banners (admin JWT)
-          </p>
         </div>
         <motion.div className="flex flex-wrap items-center gap-2">
           <Button

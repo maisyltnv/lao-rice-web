@@ -66,6 +66,8 @@ export default function CheckoutPage() {
   const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
 
   const [paymentMethod, setPaymentMethod] = useState<"bcel" | "cod">("bcel");
+  const [bcelQrEnabled, setBcelQrEnabled] = useState(true);
+  const [codEnabled, setCodEnabled] = useState(true);
   const [paymentReceipt, setPaymentReceipt] = useState<PaymentReceiptFile | null>(
     null
   );
@@ -126,6 +128,17 @@ export default function CheckoutPage() {
         if (cancelled) return;
         setFreeShippingMin(config.free_shipping_min_subtotal_lak);
         setDefaultShippingFee(config.shipping_fee_lak);
+        const bcel = config.bcel_qr_enabled ?? true;
+        const cod = config.cod_enabled ?? true;
+        setBcelQrEnabled(bcel);
+        setCodEnabled(cod);
+        setPaymentMethod((current) => {
+          if (current === "bcel" && bcel) return "bcel";
+          if (current === "cod" && cod) return "cod";
+          if (bcel) return "bcel";
+          if (cod) return "cod";
+          return current;
+        });
       } catch {
         /* keep defaults */
       }
@@ -458,57 +471,64 @@ export default function CheckoutPage() {
                 >
                   <h2 className="text-2xl font-bold mb-6">ເລືອກວິທີຊຳລະເງິນ</h2>
                   <div className="space-y-4">
-                    {/* BCEL One */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bcel")}
-                      className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
-                        paymentMethod === "bcel"
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-                        <QrCode className="h-6 w-6" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium">BCEL One QR</p>
-                        <p className="text-sm text-muted-foreground">
-                          ສະແກນ QR Code ຈ່າຍຜ່ານ BCEL One
-                        </p>
-                      </div>
-                      {paymentMethod === "bcel" && (
-                        <CheckCircle className="h-5 w-5 text-primary ml-auto" />
-                      )}
-                    </button>
+                    {!bcelQrEnabled && !codEnabled && (
+                      <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                        ຮ້ານປິດການຊຳລະຊົ່ວຄາວ — ກະລຸນາຕິດຕໍ່ຮ້ານ
+                      </p>
+                    )}
+                    {bcelQrEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("bcel")}
+                        className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
+                          paymentMethod === "bcel"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                          <QrCode className="h-6 w-6" />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium">BCEL One QR</p>
+                          <p className="text-sm text-muted-foreground">
+                            ສະແກນ QR Code ຈ່າຍຜ່ານ BCEL One
+                          </p>
+                        </div>
+                        {paymentMethod === "bcel" && (
+                          <CheckCircle className="h-5 w-5 text-primary ml-auto" />
+                        )}
+                      </button>
+                    )}
 
-                    {/* COD */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaymentMethod("cod");
-                        clearPaymentReceipt();
-                        setOrderError(null);
-                      }}
-                      className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
-                        paymentMethod === "cod"
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                        <Banknote className="h-6 w-6 text-secondary-foreground" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-medium">ເກັບເງິນປາຍທາງ (COD)</p>
-                        <p className="text-sm text-muted-foreground">
-                          ຈ່າຍເງິນເມື່ອໄດ້ຮັບສິນຄ້າ
-                        </p>
-                      </div>
-                      {paymentMethod === "cod" && (
-                        <CheckCircle className="h-5 w-5 text-primary ml-auto" />
-                      )}
-                    </button>
+                    {codEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod("cod");
+                          clearPaymentReceipt();
+                          setOrderError(null);
+                        }}
+                        className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-4 ${
+                          paymentMethod === "cod"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/30"
+                        }`}
+                      >
+                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
+                          <Banknote className="h-6 w-6 text-secondary-foreground" />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium">ເກັບເງິນປາຍທາງ (COD)</p>
+                          <p className="text-sm text-muted-foreground">
+                            ຈ່າຍເງິນເມື່ອໄດ້ຮັບສິນຄ້າ
+                          </p>
+                        </div>
+                        {paymentMethod === "cod" && (
+                          <CheckCircle className="h-5 w-5 text-primary ml-auto" />
+                        )}
+                      </button>
+                    )}
 
                     {/* BCEL QR Preview */}
                     {paymentMethod === "bcel" && (
