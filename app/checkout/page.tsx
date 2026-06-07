@@ -319,13 +319,7 @@ export default function CheckoutPage() {
     });
 
     clearCart();
-    if (orderNumber && typeof window !== "undefined") {
-      sessionStorage.setItem("checkoutOrderNumber", orderNumber);
-    }
-    const successUrl = orderNumber
-      ? `/checkout/success?order=${encodeURIComponent(orderNumber)}`
-      : "/checkout/success";
-    router.push(successUrl);
+    router.push("/orders");
     setIsSubmitting(false);
   };
 
