@@ -22,6 +22,7 @@ import type {
   ApiOrderStatus,
   ApiUpdateOrderStatusBody,
   ApiShippingConfig,
+  ApiShopSettings,
   ApiUpdateShopSettingsBody,
   ApiShippingQuote,
   ApiProduct,
@@ -528,16 +529,19 @@ export async function apiGetShippingConfig(): Promise<ApiShippingConfig> {
 }
 
 /** Public — GET /shop-settings */
-export async function apiGetShopSettings(): Promise<ApiShippingConfig> {
-  const { data } = await publicClient.get<ApiShippingConfig>("/shop-settings");
+export async function apiGetShopSettings(): Promise<ApiShopSettings> {
+  const { data } = await publicClient.get<ApiShopSettings>("/shop-settings");
   return data;
 }
 
 /** Admin JWT — PUT /shop-settings */
 export async function apiUpdateShopSettings(
   body: ApiUpdateShopSettingsBody
-): Promise<ApiShippingConfig> {
-  const { data } = await adminClient.put<ApiShippingConfig>(
+): Promise<ApiShopSettings> {
+  if (!getStoredAdminAccessToken()) {
+    throw new Error("ກະລຸນາເຂົ້າສູ່ລະບົບ admin ກ່ອນບັນທຶກ");
+  }
+  const { data } = await adminClient.put<ApiShopSettings>(
     "/shop-settings",
     body
   );

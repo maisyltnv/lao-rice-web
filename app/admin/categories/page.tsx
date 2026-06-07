@@ -231,9 +231,6 @@ export default function AdminCategoriesPage() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">ໝວດໝູ່ສິນຄ້າ</h1>
-          <p className="text-muted-foreground">
-            CRUD ກັບ API — GET /categories, POST/PUT/DELETE ຕ້ອງໃຊ້ JWT ແອັດມິນ
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button

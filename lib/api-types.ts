@@ -149,12 +149,39 @@ export interface ApiUpdateProductBody {
   source_url?: string;
 }
 
-/** GET /orders/shipping-config | GET /shop-settings */
+/** GET /orders/shipping-config */
 export interface ApiShippingConfig {
   shipping_fee_lak: number;
   free_shipping_min_subtotal_lak: number;
   bcel_qr_enabled?: boolean;
   cod_enabled?: boolean;
+  updated_at?: string;
+}
+
+export interface ApiAdminPrefs {
+  new_orders: boolean;
+  low_stock: boolean;
+  daily_summary: boolean;
+  two_factor: boolean;
+  staff_approval: boolean;
+}
+
+/** GET /shop-settings */
+export interface ApiShopSettings {
+  shipping_fee_lak: number;
+  free_shipping_min_subtotal_lak: number;
+  bcel_qr_enabled: boolean;
+  cod_enabled: boolean;
+  shop_name: string;
+  phone: string;
+  email: string;
+  province: string;
+  address: string;
+  description: string;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  admin_prefs: ApiAdminPrefs;
   updated_at?: string;
 }
 
@@ -164,6 +191,16 @@ export interface ApiUpdateShopSettingsBody {
   free_shipping_min_subtotal_lak: number;
   bcel_qr_enabled: boolean;
   cod_enabled: boolean;
+  shop_name: string;
+  phone: string;
+  email: string;
+  province: string;
+  address: string;
+  description: string;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  admin_prefs: ApiAdminPrefs;
 }
 
 /** GET /orders/shipping-quote */
