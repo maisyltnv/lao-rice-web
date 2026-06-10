@@ -1,32 +1,40 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Truck, Shield, Headphones, CreditCard } from "lucide-react";
-
-const features = [
-  {
-    icon: Truck,
-    titleLao: "ສົ່ງເຖິງບ້ານໃນວຽງຈັນ",
-    descriptionLao: "ເລືອກຈຸດສົ່ງດ້ວຍແຜນທີ່ · ຟຣີເມື່ອຍອດເກີນ 500.000 ₭",
-  },
-  {
-    icon: Shield,
-    titleLao: "ເຂົ້າຄຸນນະພາບ",
-    descriptionLao: "ເຂົ້ານາປີ · ນາແຊງ · ຈ້າວມະລິ ແລະ ອື່ນໆ",
-  },
-  {
-    icon: Headphones,
-    titleLao: "ບໍລິການລູກຄ້າ 24/7",
-    descriptionLao: "ຕິດຕໍ່ພວກເຮົາໄດ້ຕະຫຼອດເວລາ",
-  },
-  {
-    icon: CreditCard,
-    titleLao: "ຊຳລະປອດໄພ",
-    descriptionLao: "ຮອງຮັບ BCEL One ແລະ ເກັບເງິນປາຍທາງ",
-  },
-];
+import { formatLAK } from "@/lib/format";
+import { useShippingConfig } from "@/lib/use-shipping-config";
 
 export function FeaturesSection() {
+  const { freeShippingMinLak } = useShippingConfig();
+
+  const features = useMemo(
+    () => [
+      {
+        icon: Truck,
+        titleLao: "ສົ່ງເຖິງບ້ານໃນວຽງຈັນ",
+        descriptionLao: `ເລືອກຈຸດສົ່ງດ້ວຍແຜນທີ່ · ຟຣີເມື່ອຍອດເກີນ ${formatLAK(freeShippingMinLak)}`,
+      },
+      {
+        icon: Shield,
+        titleLao: "ເຂົ້າຄຸນນະພາບ",
+        descriptionLao: "ເຂົ້ານາປີ · ນາແຊງ · ຈ້າວມະລິ ແລະ ອື່ນໆ",
+      },
+      {
+        icon: Headphones,
+        titleLao: "ບໍລິການລູກຄ້າ 24/7",
+        descriptionLao: "ຕິດຕໍ່ພວກເຮົາໄດ້ຕະຫຼອດເວລາ",
+      },
+      {
+        icon: CreditCard,
+        titleLao: "ຊຳລະປອດໄພ",
+        descriptionLao: "ຮອງຮັບ BCEL One ແລະ ເກັບເງິນປາຍທາງ",
+      },
+    ],
+    [freeShippingMinLak]
+  );
+
   return (
     <section className="py-12 border-b border-border">
       <div className="container mx-auto px-4">
