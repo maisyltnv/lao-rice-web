@@ -23,9 +23,11 @@ import { useAuth } from "@/lib/auth";
 import { getCustomerPhone } from "@/lib/customer-account";
 import { useStore } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
+import { useShippingConfig } from "@/lib/use-shipping-config";
 
 export function Header() {
   const router = useRouter();
+  const { freeShippingMinLak } = useShippingConfig();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
@@ -56,7 +58,10 @@ export function Header() {
     <>
       {/* Top Bar */}
       <div className="bg-primary text-primary-foreground py-2 text-center text-sm">
-        <p>ຈັດສົ່ງເຂົ້າຖຶງບ້ານ · ພາຍໃນນະຄອນຫຼວງວຽງຈັນ · ຟຣີເມື່ອຍອດເກີນ 500.000 ₭</p>
+        <p>
+          ຈັດສົ່ງເຂົ້າເຖິງບ້ານ · ພາຍໃນນະຄອນຫຼວງວຽງຈັນ · ຟຣີເມື່ອຍອດເກີນ{" "}
+          {formatLAK(freeShippingMinLak)}
+        </p>
       </div>
 
       {/* Main Header */}

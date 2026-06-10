@@ -73,7 +73,7 @@ export default function ShippingPage() {
     <div className="container mx-auto px-4 py-10 max-w-2xl">
       <div className="flex flex-col items-center text-center mb-10">
         <BrandLogo size={56} />
-        <h1 className="text-2xl font-bold mt-6">ການຈັດສົ່ງເຂົ້າຖຶງບ້ານ</h1>
+        <h1 className="text-2xl font-bold mt-6">ການຈັດສົ່ງເຂົ້າເຖິງບ້ານ</h1>
         <p className="text-muted-foreground text-sm mt-2 max-w-md">
           ພວກເຮົາຈັດສົ່ງພາຍໃນນະຄອນຫຼວງວຽງຈັນ — ເລືອກຈຸດສົ່ງດ້ວຍແຜນທີ່ GPS ຕອນຊຳລະເງິນ
         </p>
