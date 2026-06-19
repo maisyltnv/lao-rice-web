@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiListPublicBanners } from "@/lib/api";
-import { getBannerImageSrc } from "@/lib/banner-image-url";
+import { BannerImage } from "@/components/banner/banner-image";
 import type { ApiBanner } from "@/lib/api-types";
 
 export function AppPromoBanner() {
@@ -47,9 +47,8 @@ export function AppPromoBanner() {
   const b = banners[i];
   const inner = (
     <div className="relative h-32 overflow-hidden rounded-[20px]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={getBannerImageSrc(b.image_url)}
+      <BannerImage
+        src={b.image_url}
         alt={b.title}
         className="absolute inset-0 h-full w-full object-cover"
       />
