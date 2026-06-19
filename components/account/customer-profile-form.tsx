@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { getCustomerPhone } from "@/lib/customer-account";
+import { onlyDigits } from "@/lib/input-utils";
 import {
   getCustomerProfileFromUser,
   hasSavedCustomerProfile,
@@ -130,8 +131,9 @@ export function CustomerProfileForm() {
           id="profile-phone"
           className="h-12 rounded-[14px] border border-border bg-card px-3"
           type="tel"
+          inputMode="numeric"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => setPhone(onlyDigits(e.target.value))}
           placeholder="020 xxxx xxxx"
         />
       </div>

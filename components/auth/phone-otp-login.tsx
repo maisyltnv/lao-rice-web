@@ -11,6 +11,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { onlyDigits } from "@/lib/input-utils";
 import { useAuth } from "@/lib/auth";
 import { apiSendOtp } from "@/lib/api";
 import { useStore } from "@/lib/store";
@@ -116,11 +118,11 @@ export function PhoneOtpLogin() {
                   <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="tel"
-                    inputMode="tel"
+                    inputMode="numeric"
                     placeholder="020 1234 5678"
                     className="h-12 w-full rounded-[14px] border border-border bg-card pl-10 pr-3 text-sm outline-none focus:border-primary"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(onlyDigits(e.target.value))}
                     onKeyDown={(e) => e.key === "Enter" && void sendOtp()}
                   />
                 </div>
@@ -144,7 +146,13 @@ export function PhoneOtpLogin() {
                 ສົ່ງລະຫັດໄປເບີ <strong>{phone.trim()}</strong>
               </p>
               <div className="flex justify-center">
-                <InputOTP maxLength={4} value={code} onChange={setCode}>
+                <InputOTP
+                  maxLength={4}
+                  value={code}
+                  onChange={(v) => setCode(onlyDigits(v))}
+                  inputMode="numeric"
+                  pattern={REGEXP_ONLY_DIGITS}
+                >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />

@@ -29,6 +29,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getCustomerPhone } from "@/lib/customer-account";
+import { onlyDigits } from "@/lib/input-utils";
 import {
   getCustomerProfileFromUser,
   profileToUpdateBody,
@@ -415,9 +416,13 @@ export default function CheckoutPage() {
                       <input
                         required
                         type="tel"
+                        inputMode="numeric"
                         value={shippingInfo.phone}
                         onChange={(e) =>
-                          setShippingInfo({ ...shippingInfo, phone: e.target.value })
+                          setShippingInfo({
+                            ...shippingInfo,
+                            phone: onlyDigits(e.target.value),
+                          })
                         }
                         placeholder="020 XXXX XXXX"
                         className="h-12 w-full rounded-[14px] border border-border bg-card px-3 text-sm outline-none focus:border-primary"
