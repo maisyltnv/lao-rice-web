@@ -1,35 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Minus,
-  Plus,
-  ShoppingCart,
-  Heart,
-  Share2,
-  Truck,
-  Shield,
-  RotateCcw,
-  Eye,
-  Check,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
+import { Minus, Plus, Check } from "lucide-react";
 import { useStore, Product } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
 import { ProductCard } from "@/components/products/product-card";
 import { apiGetProduct, isApiConfigured } from "@/lib/api";
 import { apiProductToStoreProduct } from "@/lib/map-api-product";
 import { ProductImage } from "@/components/products/product-image";
+import { AppTopBar } from "@/components/layout/app-top-bar";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { products, addToCart } = useStore();
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -81,10 +66,13 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-muted-foreground text-center">
-          {loadError ?? "ກຳລັງໂຫຼດ..."}
-        </p>
+      <div className="min-h-screen bg-background">
+        <AppTopBar back={true} />
+        <div className="flex min-h-[60vh] items-center justify-center px-4">
+          <p className="text-center text-muted-foreground">
+            {loadError ?? "ກຳລັງໂຫຼດ..."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -101,281 +89,161 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-4">
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-          <button onClick={() => router.push("/")} className="hover:text-primary">
-            ໜ້າຫຼັກ
-          </button>
-          <ChevronRight className="h-4 w-4" />
-          <button onClick={() => router.push("/products")} className="hover:text-primary">
-            ສິນຄ້າ
-          </button>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{product.nameLao}</span>
-        </nav>
-      </div>
+      <AppTopBar back={true} title={product.nameLao} />
 
-      {/* Product Detail */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image Gallery */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
-          >
-            {/* Main Image */}
-            <div className="relative aspect-square bg-muted rounded-xl overflow-hidden">
-              <ProductImage
-                src={product.images[selectedImageIndex]}
-                alt={product.nameLao}
-                productName={product.nameLao}
-                className="w-full h-full object-cover"
-              />
-
-              {/* Navigation Arrows */}
-              {product.images.length > 1 && (
-                <>
-                  <button
-                    onClick={() =>
-                      setSelectedImageIndex((prev) =>
-                        prev === 0 ? product.images.length - 1 : prev - 1
-                      )
-                    }
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/80 rounded-full flex items-center justify-center hover:bg-background transition-colors"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setSelectedImageIndex((prev) =>
-                        prev === product.images.length - 1 ? 0 : prev + 1
-                      )
-                    }
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/80 rounded-full flex items-center justify-center hover:bg-background transition-colors"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </>
+      <div className="pb-44">
+        {/* Hero image */}
+        <div className="px-4 pt-4">
+          <div className="relative aspect-square overflow-hidden rounded-[20px] bg-muted">
+            <ProductImage
+              src={product.images[selectedImageIndex]}
+              alt={product.nameLao}
+              productName={product.nameLao}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute left-3 top-3 flex flex-col gap-2">
+              {product.isNew && (
+                <span className="rounded-[24px] bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+                  ໃໝ່
+                </span>
               )}
-
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {product.isNew && (
-                  <span className="px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-medium rounded-full">
-                    ໃໝ່
-                  </span>
-                )}
-                {product.isBestSeller && (
-                  <span className="px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-full">
-                    ຂາຍດີ
-                  </span>
-                )}
-              </div>
+              {product.isBestSeller && (
+                <span className="rounded-[24px] bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                  ຂາຍດີ
+                </span>
+              )}
             </div>
+          </div>
 
-            {/* Thumbnails */}
-            {product.images.length > 1 && (
-              <div className="flex items-center gap-3">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                      selectedImageIndex === index
-                        ? "border-primary"
-                        : "border-transparent hover:border-muted-foreground/30"
-                    }`}
-                  >
-                    <ProductImage
-                      src={image}
-                      alt={`${product.nameLao} ${index + 1}`}
-                      productName={product.nameLao}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+          {/* Thumbnails */}
+          {product.images.length > 1 && (
+            <div className="no-scrollbar mt-3 flex items-center gap-3 overflow-x-auto">
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-[14px] bg-muted ${
+                    selectedImageIndex === index ? "ring-2 ring-primary" : ""
+                  }`}
+                >
+                  <ProductImage
+                    src={image}
+                    alt={`${product.nameLao} ${index + 1}`}
+                    productName={product.nameLao}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="px-4 pt-5">
+          <span className="inline-block rounded-[10px] bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+            {product.categoryLao}
+          </span>
+          <h1 className="mt-2 text-[22px] font-extrabold leading-tight text-foreground">
+            {product.nameLao}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{product.name}</p>
+          <p className="mt-3 text-[22px] font-extrabold text-primary">
+            {formatLAK(product.priceLAK)}
+          </p>
+
+          {/* Stock / viewers */}
+          <div className="mt-4 flex flex-col gap-2 rounded-[20px] bg-muted px-4 py-3">
+            {product.stock < 20 && (
+              <div className="flex items-center gap-2 text-destructive">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
+                <span className="text-sm font-medium">
+                  ເຫຼືອ {product.stock} ຖົງ
+                </span>
               </div>
             )}
-          </motion.div>
+            <span className="text-sm text-muted-foreground">
+              ມີຄົນກຳລັງເບິ່ງສິນຄ້ານີ້ {viewersCount} ຄົນ
+            </span>
+          </div>
 
-          {/* Product Info */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
-            {/* Category & Trust Badges */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">
-                {product.categoryLao}
-              </span>
-              {product.trustBadges.map((badge, index) => (
-                <span
-                  key={index}
-                  className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full"
-                >
-                  {badge}
-                </span>
-              ))}
-            </div>
-
-            {/* Title */}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                {product.nameLao}
-              </h1>
-              <p className="text-muted-foreground">{product.name}</p>
-            </div>
-
-            {/* Price */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-primary">
-                {formatLAK(product.priceLAK)}
-              </span>
-            </div>
-
-            {/* Urgency Features */}
-            <div className="flex flex-col gap-2 p-4 bg-muted/50 rounded-xl">
-              {product.stock < 20 && (
-                <div className="flex items-center gap-2 text-destructive">
-                  <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                  <span className="text-sm font-medium">
-                    ເຫຼືອ {product.stock} ຖົງ
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Eye className="h-4 w-4" />
-                <span className="text-sm">
-                  ມີຄົນກຳລັງເບິ່ງສິນຄ້ານີ້ {viewersCount} ຄົນ
-                </span>
-              </div>
-            </div>
-
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium">ຈຳນວນ:</span>
-              <div className="flex items-center gap-3 bg-muted rounded-lg p-1">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-10 h-10 rounded-md bg-background flex items-center justify-center hover:bg-muted-foreground/10 transition-colors"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                  className="w-10 h-10 rounded-md bg-background flex items-center justify-center hover:bg-muted-foreground/10 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <Button
-                size="lg"
-                className={`flex-1 ${
-                  isAdded ? "bg-green-600 hover:bg-green-600" : ""
-                }`}
-                onClick={handleAddToCart}
+          {/* Quantity selector */}
+          <div className="mt-5 flex items-center gap-4">
+            <span className="text-[15px] font-bold">ຈຳນວນ</span>
+            <div className="flex items-center gap-2 rounded-[10px] bg-muted p-1">
+              <button
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="flex h-9 w-9 items-center justify-center rounded-[8px] text-primary"
+                aria-label="ຫຼຸດ"
               >
-                {isAdded ? (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    ເພີ່ມແລ້ວ!
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    ເພີ່ມໃສ່ກະຕ່າ
-                  </>
-                )}
-              </Button>
-              <Button size="lg" variant="outline">
-                <Heart className="h-5 w-5" />
-              </Button>
-              <Button size="lg" variant="outline">
-                <Share2 className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-border">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Truck className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">ສົ່ງຟຣີ</p>
-                  <p className="text-xs text-muted-foreground">ຄຳສັ່ງເກີນ 500k</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">ເຂົ້າຄຸນນະພາບ</p>
-                  <p className="text-xs text-muted-foreground">ຄັດເລືອກແລ້ວ</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <RotateCcw className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">ສົ່ງຄືນໄດ້</p>
-                  <p className="text-xs text-muted-foreground">ພາຍໃນ 7 ວັນ</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Product Details Tabs */}
-        <div className="mt-16">
-          <div className="border-b border-border">
-            <div className="flex items-center gap-8">
-              <button className="pb-4 border-b-2 border-primary text-primary font-medium">
-                ລາຍລະອຽດສິນຄ້າ
+                <Minus className="h-4 w-4" />
               </button>
-              <button className="pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground">
-                ວິທີເກັບຮັກສາ
+              <span className="w-10 text-center font-semibold">{quantity}</span>
+              <button
+                onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                className="flex h-9 w-9 items-center justify-center rounded-[8px] text-primary"
+                aria-label="ເພີ່ມ"
+              >
+                <Plus className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <div className="py-8">
-            <div className="max-w-3xl">
-              <h3 className="text-lg font-semibold mb-4">ລາຍລະອຽດ</h3>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                {product.descriptionLao}
-              </p>
-
-              <h3 className="text-lg font-semibold mb-4">ວິທີເກັບຮັກສາ</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {product.howToUseLao ||
-                  "ເກັບໃນບ່ອນແຫ້ງ ປ້ອງກັນແມງໄມ້. ປິດຖົງໃຫ້ສົນຫຼັງເປີດແລ້ວ."}
-              </p>
-            </div>
+          {/* Description */}
+          <div className="mt-6">
+            <h3 className="text-[15px] font-bold">ລາຍລະອຽດ</h3>
+            <p className="mt-2 leading-relaxed text-muted-foreground">
+              {product.descriptionLao}
+            </p>
           </div>
+
+          {/* How to use / storage */}
+          <div className="mt-5">
+            <h3 className="text-[15px] font-bold">ວິທີເກັບຮັກສາ</h3>
+            <p className="mt-2 leading-relaxed text-muted-foreground">
+              {product.howToUseLao ||
+                "ເກັບໃນບ່ອນແຫ້ງ ປ້ອງກັນແມງໄມ້. ປິດຖົງໃຫ້ສົນຫຼັງເປີດແລ້ວ."}
+            </p>
+          </div>
+
+          {/* Related products */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-8">
+              <h2 className="mb-3 text-[17px] font-extrabold">
+                ສິນຄ້າທີ່ກ່ຽວຂ້ອງ
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {relatedProducts.map((relatedProduct) => (
+                  <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-8">ສິນຄ້າທີ່ກ່ຽວຂ້ອງ</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((relatedProduct) => (
-                <ProductCard key={relatedProduct.id} product={relatedProduct} />
-              ))}
-            </div>
+      {/* Sticky bottom action bar */}
+      <div className="fixed bottom-[68px] left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground">ລາຄາ</span>
+            <span className="text-[18px] font-extrabold text-primary">
+              {formatLAK(product.priceLAK)}
+            </span>
           </div>
-        )}
+          <button
+            onClick={handleAddToCart}
+            className="flex flex-1 items-center justify-center gap-2 rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground"
+          >
+            {isAdded ? (
+              <>
+                <Check className="h-5 w-5" />
+                ເພີ່ມແລ້ວ!
+              </>
+            ) : (
+              "ເພີ່ມໃສ່ກະຕ່າ"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

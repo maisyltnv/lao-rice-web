@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import { Phone } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AppTopBar } from "@/components/layout/app-top-bar";
 import {
   InputOTP,
   InputOTPGroup,
@@ -88,91 +86,107 @@ export function PhoneOtpLogin() {
   }, [code, loginWithPhoneOtp, phone, redirectTo, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm"
-      >
-        <div className="flex items-center gap-3 mb-8">
-          <BrandLogo size={44} />
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              ຮ້ານເຂົ້າສານ
-            </p>
-            <h1 className="text-xl font-bold">ເຂົ້າລະບົບດ້ວຍເບີໂທ</h1>
-            <p className="text-sm text-muted-foreground">
-              ຕ້ອງເຂົ້າລະບົບກ່ອນສັ່ງຊື້
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <AppTopBar back title="ເຂົ້າສູ່ລະບົບ" />
 
-        {step === "phone" ? (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">ເບີໂທລະສັບ</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="020 1234 5678"
-                  className="pl-10"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && void sendOtp()}
-                />
-              </div>
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button className="w-full" disabled={loading} onClick={() => void sendOtp()}>
-              {loading ? "ກຳລັງສົ່ງ..." : "ສົ່ງລະຫັດ OTP"}
-            </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              ທົດລອງ: ໃຊ້ລະຫັດ <strong>1234</strong> (ຈົນກວ່າ SMS API ພ້ອມ)
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              ສົ່ງລະຫັດໄປເບີ <strong>{phone.trim()}</strong>
-            </p>
-            <div className="flex justify-center">
-              <InputOTP maxLength={4} value={code} onChange={setCode}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            {error && <p className="text-sm text-destructive text-center">{error}</p>}
-            <Button className="w-full" disabled={loading} onClick={() => void verifyOtp()}>
-              {loading ? "ກຳລັງກວດ..." : "ຢືນຢັນ ແລະ ເຂົ້າລະບົບ"}
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full"
-              disabled={loading}
-              onClick={() => {
-                setStep("phone");
-                setCode("");
-                setError(null);
-              }}
-            >
-              ປ່ຽນເບີໂທ
-            </Button>
-          </div>
-        )}
-
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          ທ່ານແມ່ນພະນັກງານ?{" "}
-          <Link href="/admin/login" className="text-primary font-medium hover:underline">
-            ເຂົ້າແອັດມິນ
-          </Link>
+      <div className="px-4 pt-8 pb-12">
+        <Image
+          src="/icon-192.png"
+          alt="Lao Rice"
+          width={64}
+          height={64}
+          className="mx-auto h-16 w-16 rounded-[16px] shadow-app-soft"
+          priority
+        />
+        <h1 className="mt-5 text-center text-[20px] font-extrabold">
+          ຍິນດີຕ້ອນຮັບ
+        </h1>
+        <p className="mt-1 text-center text-sm text-muted-foreground">
+          ເຂົ້າສູ່ລະບົບດ້ວຍເບີໂທລະສັບ
         </p>
-      </motion.div>
+
+        <div className="mx-auto mt-8 w-full max-w-sm">
+          {step === "phone" ? (
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  ເບີໂທລະສັບ
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="020 1234 5678"
+                    className="h-12 w-full rounded-[14px] border border-border bg-card pl-10 pr-3 text-sm outline-none focus:border-primary"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && void sendOtp()}
+                  />
+                </div>
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <button
+                type="button"
+                className="w-full rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground disabled:opacity-60"
+                disabled={loading}
+                onClick={() => void sendOtp()}
+              >
+                {loading ? "ກຳລັງສົ່ງ..." : "ສົ່ງລະຫັດ OTP"}
+              </button>
+              <p className="text-center text-xs text-muted-foreground">
+                ທົດລອງ: ໃຊ້ລະຫັດ <strong>1234</strong> (ຈົນກວ່າ SMS API ພ້ອມ)
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-center text-sm text-muted-foreground">
+                ສົ່ງລະຫັດໄປເບີ <strong>{phone.trim()}</strong>
+              </p>
+              <div className="flex justify-center">
+                <InputOTP maxLength={4} value={code} onChange={setCode}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              {error && (
+                <p className="text-center text-sm text-destructive">{error}</p>
+              )}
+              <button
+                type="button"
+                className="w-full rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground disabled:opacity-60"
+                disabled={loading}
+                onClick={() => void verifyOtp()}
+              >
+                {loading ? "ກຳລັງກວດ..." : "ຢືນຢັນ ແລະ ເຂົ້າລະບົບ"}
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-[14px] py-3 text-[15px] font-medium text-muted-foreground hover:bg-accent disabled:opacity-60"
+                disabled={loading}
+                onClick={() => {
+                  setStep("phone");
+                  setCode("");
+                  setError(null);
+                }}
+              >
+                ປ່ຽນເບີໂທ
+              </button>
+            </div>
+          )}
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            ທ່ານແມ່ນພະນັກງານ?{" "}
+            <Link href="/admin/login" className="font-medium text-primary hover:underline">
+              ເຂົ້າແອັດມິນ
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

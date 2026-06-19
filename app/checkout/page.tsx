@@ -15,9 +15,9 @@ import {
   QrCode,
   Banknote,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { AppTopBar } from "@/components/layout/app-top-bar";
 import { useStore } from "@/lib/store";
 import { formatLAK } from "@/lib/format";
 import {
@@ -325,8 +325,9 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-background">
+        <AppTopBar back title="ຊຳລະເງິນ" />
+        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
           <p className="text-muted-foreground mb-4">ກະຕ່າຂອງທ່ານຫວ່າງເປົ່າ</p>
           <Button onClick={() => router.push("/products")}>
             ເລີ່ມຊື້ເຄື່ອງ
@@ -338,49 +339,42 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <AppTopBar back title="ຊຳລະເງິນ" />
+
       {/* Progress Steps */}
-      <div className="bg-muted/50 border-b border-border">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-center">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`flex items-center gap-2 ${
-                    currentStep >= step.id
-                      ? "text-primary"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      currentStep >= step.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {currentStep > step.id ? (
-                      <CheckCircle className="h-5 w-5" />
-                    ) : (
-                      <step.icon className="h-5 w-5" />
-                    )}
-                  </div>
-                  <span className="hidden sm:block font-medium">
-                    {step.nameLao}
-                  </span>
-                </div>
-                {index < steps.length - 1 && (
-                  <ChevronRight className="h-5 w-5 mx-4 text-muted-foreground" />
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-2">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex flex-1 items-center gap-2">
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                  currentStep >= step.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {currentStep > step.id ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  step.id
                 )}
               </div>
-            ))}
-          </div>
+              {index < steps.length - 1 && (
+                <div
+                  className={`h-1 flex-1 rounded-full ${
+                    currentStep > step.id ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="px-4 pt-4 pb-44">
+        <div>
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div>
             <AnimatePresence mode="wait">
               {/* Step 1: Shipping */}
               {currentStep === 1 && (
@@ -390,29 +384,35 @@ export default function CheckoutPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <h2 className="text-2xl font-bold mb-6">ທີ່ຢູ່ຈັດສົ່ງ</h2>
+                  <h2 className="mb-4 text-xl font-extrabold">ທີ່ຢູ່ຈັດສົ່ງ</h2>
+                  {orderError && (
+                    <p className="mb-4 rounded-[14px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      {orderError}
+                    </p>
+                  )}
                   <form onSubmit={handleShippingSubmit} className="space-y-4">
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                         <User className="h-4 w-4" />
                         ຊື່ຜູ້ຮັບ
                       </label>
-                      <Input
+                      <input
                         required
                         value={shippingInfo.name}
                         onChange={(e) =>
                           setShippingInfo({ ...shippingInfo, name: e.target.value })
                         }
                         placeholder="ປ້ອນຊື່ຂອງທ່ານ"
+                        className="h-12 w-full rounded-[14px] border border-border bg-card px-3 text-sm outline-none focus:border-primary"
                       />
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                         <Phone className="h-4 w-4" />
                         ເບີໂທລະສັບ
                       </label>
-                      <Input
+                      <input
                         required
                         type="tel"
                         value={shippingInfo.phone}
@@ -420,6 +420,7 @@ export default function CheckoutPage() {
                           setShippingInfo({ ...shippingInfo, phone: e.target.value })
                         }
                         placeholder="020 XXXX XXXX"
+                        className="h-12 w-full rounded-[14px] border border-border bg-card px-3 text-sm outline-none focus:border-primary"
                       />
                     </div>
 
@@ -433,7 +434,7 @@ export default function CheckoutPage() {
                     />
 
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                         <MapPin className="h-4 w-4" />
                         ຈຸດສັງເກດ / ທີ່ຢູ່ລະອຽດ
                       </label>
@@ -444,14 +445,19 @@ export default function CheckoutPage() {
                           setShippingInfo({ ...shippingInfo, address: e.target.value })
                         }
                         placeholder="ບ້ານ, ຮ່ອມ, ຊັ້ນ, ສີສັງເກດໃກ້ໆ"
-                        className="w-full px-4 py-2 rounded-lg border border-input bg-background min-h-[100px]"
+                        className="min-h-[100px] w-full rounded-[14px] border border-border bg-card px-3 py-3 text-sm outline-none focus:border-primary"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" size="lg">
-                      ດຳເນີນການຕໍ່
-                      <ChevronRight className="h-5 w-5 ml-2" />
-                    </Button>
+                    <div className="fixed bottom-[68px] left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
+                      <button
+                        type="submit"
+                        className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground"
+                      >
+                        ດຳເນີນການຕໍ່
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
                   </form>
                 </motion.div>
               )}
@@ -464,10 +470,15 @@ export default function CheckoutPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <h2 className="text-2xl font-bold mb-6">ເລືອກວິທີຊຳລະເງິນ</h2>
+                  <h2 className="mb-4 text-xl font-extrabold">ເລືອກວິທີຊຳລະເງິນ</h2>
                   <div className="space-y-3">
+                    {orderError && (
+                      <p className="rounded-[14px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {orderError}
+                      </p>
+                    )}
                     {!bcelQrEnabled && !codEnabled && (
-                      <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                      <p className="rounded-[16px] border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
                         ຮ້ານປິດການຊຳລະຊົ່ວຄາວ — ກະລຸນາຕິດຕໍ່ຮ້ານ
                       </p>
                     )}
@@ -475,18 +486,18 @@ export default function CheckoutPage() {
                     <div className="space-y-3">
                       {bcelQrEnabled && (
                         <div
-                          className={`rounded-xl border-2 transition-colors overflow-hidden ${
+                          className={`overflow-hidden rounded-[16px] border transition-colors ${
                             paymentMethod === "bcel"
-                              ? "border-primary bg-primary/5"
-                              : "border-border"
+                              ? "border-primary bg-accent"
+                              : "border-border bg-card"
                           }`}
                         >
                           <button
                             type="button"
                             onClick={() => setPaymentMethod("bcel")}
-                            className="w-full p-4 flex items-center gap-3 text-left hover:bg-muted/30 transition-colors"
+                            className="flex w-full items-center gap-3 p-3 text-left"
                           >
-                            <div className="w-11 h-11 shrink-0 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white">
                               <QrCode className="h-5 w-5" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -504,13 +515,13 @@ export default function CheckoutPage() {
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className="border-t border-primary/15 bg-background/60 px-4 pb-4 pt-3"
+                              className="border-t border-primary/15 bg-card/60 px-4 pb-4 pt-3"
                             >
-                              <div className="rounded-xl bg-muted/50 p-4 text-center space-y-3">
+                              <div className="space-y-3 rounded-[16px] bg-muted/50 p-4 text-center">
                                 <p className="text-sm text-muted-foreground">
                                   ສະແກນ QR Code ເພື່ອຊຳລະເງິນ
                                 </p>
-                                <div className="mx-auto max-w-48 overflow-hidden rounded-lg border border-border bg-background p-2 shadow-sm">
+                                <div className="mx-auto max-w-48 overflow-hidden rounded-lg border border-border bg-card p-2 shadow-app-soft">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src="/images/payment/bcel_lapnet_qr.png"
@@ -518,7 +529,7 @@ export default function CheckoutPage() {
                                     className="w-full object-contain"
                                   />
                                 </div>
-                                <p className="text-xl font-bold text-primary">
+                                <p className="text-xl font-extrabold text-primary">
                                   {formatLAK(totalAmount)}
                                 </p>
                               </div>
@@ -544,13 +555,13 @@ export default function CheckoutPage() {
                             clearPaymentReceipt();
                             setOrderError(null);
                           }}
-                          className={`w-full p-4 rounded-xl border-2 transition-colors flex items-center gap-3 text-left ${
+                          className={`flex w-full items-center gap-3 rounded-[16px] border p-3 text-left transition-colors ${
                             paymentMethod === "cod"
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-muted-foreground/30 hover:bg-muted/20"
+                              ? "border-primary bg-accent"
+                              : "border-border bg-card"
                           }`}
                         >
-                          <div className="w-11 h-11 shrink-0 bg-secondary rounded-lg flex items-center justify-center">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-secondary">
                             <Banknote className="h-5 w-5 text-secondary-foreground" />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -566,22 +577,22 @@ export default function CheckoutPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 pt-2">
-                      <Button
-                        variant="outline"
+                    <div className="fixed bottom-[68px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 items-center gap-3 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
+                      <button
+                        type="button"
                         onClick={() => setCurrentStep(1)}
-                        className="flex-1"
+                        className="rounded-[14px] border border-border px-5 py-3.5 font-semibold"
                       >
                         ກັບຄືນ
-                      </Button>
-                      <Button
+                      </button>
+                      <button
+                        type="button"
                         onClick={handlePaymentSubmit}
-                        className="flex-1"
-                        size="lg"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground"
                       >
                         ດຳເນີນການຕໍ່
-                        <ChevronRight className="h-5 w-5 ml-2" />
-                      </Button>
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -595,21 +606,21 @@ export default function CheckoutPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <h2 className="text-2xl font-bold mb-6">ຢືນຢັນຄຳສັ່ງຊື້</h2>
+                  <h2 className="mb-4 text-xl font-extrabold">ຢືນຢັນຄຳສັ່ງຊື້</h2>
 
                   {orderError && (
-                    <p className="text-sm text-destructive mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+                    <p className="mb-4 rounded-[14px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                       {orderError}
                     </p>
                   )}
 
                   {/* Shipping Info Summary */}
-                  <div className="bg-muted/50 rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="mb-4 rounded-[20px] bg-card p-4 shadow-app-soft">
+                    <div className="mb-2 flex items-center justify-between">
                       <h3 className="font-medium">ທີ່ຢູ່ຈັດສົ່ງ</h3>
                       <button
                         onClick={() => setCurrentStep(1)}
-                        className="text-sm text-primary"
+                        className="text-sm font-semibold text-primary"
                       >
                         ແກ້ໄຂ
                       </button>
@@ -621,19 +632,19 @@ export default function CheckoutPage() {
                       {shippingInfo.address}
                     </p>
                     {deliveryLat != null && deliveryLng != null && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         ພິກັດ: {deliveryLat.toFixed(5)}, {deliveryLng.toFixed(5)} (ນະຄອນຫຼວງວຽງຈັນ)
                       </p>
                     )}
                   </div>
 
                   {/* Payment Summary */}
-                  <div className="bg-muted/50 rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="mb-4 rounded-[20px] bg-card p-4 shadow-app-soft">
+                    <div className="mb-2 flex items-center justify-between">
                       <h3 className="font-medium">ວິທີຊຳລະເງິນ</h3>
                       <button
                         onClick={() => setCurrentStep(2)}
-                        className="text-sm text-primary"
+                        className="text-sm font-semibold text-primary"
                       >
                         ແກ້ໄຂ
                       </button>
@@ -656,13 +667,13 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Order Items */}
-                  <div className="mb-6">
-                    <h3 className="font-medium mb-4">ສິນຄ້າທີ່ສັ່ງ</h3>
+                  <div className="mb-4">
+                    <h3 className="mb-3 font-medium">ສິນຄ້າທີ່ສັ່ງ</h3>
                     <div className="space-y-3">
                       {cart.map((item) => (
                         <div
                           key={item.product.id}
-                          className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg"
+                          className="flex items-center gap-4 rounded-[16px] bg-card p-3 shadow-app-soft"
                         >
                           <ProductImage
                             src={item.product.images[0]}
@@ -686,34 +697,34 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="outline"
+                  <div className="fixed bottom-[68px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 items-center gap-3 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
+                    <button
+                      type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="flex-1"
+                      className="rounded-[14px] border border-border px-5 py-3.5 font-semibold"
                     >
                       ກັບຄືນ
-                    </Button>
-                    <Button
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleConfirmOrder}
-                      className="flex-1 bg-primary"
-                      size="lg"
+                      className="flex-1 rounded-[14px] bg-primary py-3.5 text-[15px] font-semibold text-primary-foreground disabled:opacity-60"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? "ກຳລັງດຳເນີນການ..." : "ຢືນຢັນຄຳສັ່ງຊື້"}
-                    </Button>
+                    </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-card border border-border rounded-xl p-6">
-              <h3 className="font-bold mb-4">ສະຫຼຸບຄຳສັ່ງຊື້</h3>
+          {/* Order Summary */}
+          <div className="mt-6">
+            <div className="rounded-[20px] bg-card p-4 shadow-app-soft">
+              <h3 className="mb-4 font-bold">ສະຫຼຸບຄຳສັ່ງຊື້</h3>
 
-              <div className="space-y-3 mb-6">
+              <div className="mb-4 space-y-3">
                 {cart.map((item) => (
                   <div key={item.product.id} className="flex items-center gap-3">
                     <div className="relative">
@@ -723,12 +734,12 @@ export default function CheckoutPage() {
                         productName={item.product.nameLao}
                         className="w-12 h-12 object-cover rounded-md"
                       />
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                         {item.quantity}
                       </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
                         {item.product.nameLao}
                       </p>
                     </div>
@@ -739,7 +750,7 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="border-t border-border pt-4 space-y-2">
+              <div className="space-y-2 border-t border-border pt-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">ລວມສິນຄ້າ</span>
                   <span>{formatLAK(cartTotal)}</span>
@@ -754,21 +765,21 @@ export default function CheckoutPage() {
                     )}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-lg font-bold pt-2 border-t border-border">
-                  <span>ລວມທັງໝົດ</span>
-                  <span className="text-primary">{formatLAK(totalAmount)}</span>
+                <div className="flex items-center justify-between border-t border-border pt-2 text-lg">
+                  <span className="font-semibold">ລວມທັງໝົດ</span>
+                  <span className="font-extrabold text-primary">{formatLAK(totalAmount)}</span>
                 </div>
               </div>
 
               {amountUntilFree > 0 && !shippingQuote?.free_shipping_applied && (
-                <p className="text-xs text-muted-foreground mt-4 text-center">
+                <p className="mt-4 text-center text-xs text-muted-foreground">
                   {quoteLoading
                     ? "ກຳລັງຄິດຄ່າສົ່ງ..."
                     : `ຊື້ເພີ່ມອີກ ${formatLAK(amountUntilFree)} ເພື່ອຮັບການຈັດສົ່ງຟຣີ`}
                 </p>
               )}
               {shippingQuote?.free_shipping_applied && (
-                <p className="text-xs text-primary mt-4 text-center font-medium">
+                <p className="mt-4 text-center text-xs font-medium text-primary">
                   ຮັບການຈັດສົ່ງຟຣີແລ້ວ
                 </p>
               )}
