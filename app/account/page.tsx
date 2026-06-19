@@ -3,12 +3,13 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, Phone, ShoppingCart, Truck, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Package, ShoppingCart, Truck, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { CustomerProfileForm } from "@/components/account/customer-profile-form";
 import { getCustomerPhone } from "@/lib/customer-account";
+import { getCustomerProfileFromUser } from "@/lib/customer-profile";
 import { useStore } from "@/lib/store";
+import { AppTopBar } from "@/components/layout/app-top-bar";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -30,69 +31,80 @@ export default function AccountPage() {
     );
   }
 
+  const displayName = (
+    getCustomerProfileFromUser(user)?.recipientName || ""
+  ).trim();
+  const initial = displayName ? displayName.charAt(0).toUpperCase() : "";
+
+  const tiles = [
+    { href: "/orders", label: "ຄຳສັ່ງຊື້ຂອງຂ້ອຍ", icon: Package },
+    { href: "/shipping", label: "ຂໍ້ມູນການຈັດສົ່ງ", icon: Truck },
+    {
+      href: "/cart",
+      label: `ກະຕ່າ${cartCount > 0 ? ` (${cartCount})` : ""}`,
+      icon: ShoppingCart,
+    },
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-10 max-w-lg">
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-6 w-6 text-primary" />
+    <div className="pb-6">
+      <AppTopBar title="ບັນຊີ" />
+
+      {/* PROFILE HEADER */}
+      <div className="px-4 mt-3">
+        <div className="rounded-[24px] border border-border bg-accent p-4 flex items-center gap-3">
+          <div className="h-16 w-16 rounded-full bg-card border border-border flex items-center justify-center shrink-0">
+            {initial ? (
+              <span className="text-[24px] font-extrabold text-primary">
+                {initial}
+              </span>
+            ) : (
+              <User className="h-8 w-8 text-primary" />
+            )}
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              ບັນຊີຂອງຂ້ອຍ
+          <div className="min-w-0">
+            <p className="text-[20px] font-extrabold truncate">
+              {displayName || "ບັນຊີຂອງຂ້ອຍ"}
             </p>
-            <h1 className="text-xl font-bold">ເຂົ້າລະບົບແລ້ວ</h1>
+            <p className="text-sm text-muted-foreground truncate">
+              {phone || "—"}
+            </p>
           </div>
         </div>
+      </div>
 
-        <div className="space-y-4 mb-8">
-          <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
-            <Phone className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div>
-              <p className="text-xs text-muted-foreground">ເບີໂທລະສັບ</p>
-              <p className="font-semibold">{phone || "—"}</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            ຄຳສັ່ງຊື້ຜູກກັບເບີໂທນີ້ ແລະ ບັນຊີທີ່ເຂົ້າລະບົບດ້ວຍ OTP
-          </p>
-        </div>
+      {/* ACTION TILES */}
+      <div className="px-4 mt-4 space-y-2">
+        {tiles.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex items-center gap-3 rounded-[14px] bg-card shadow-app-soft px-4 py-3.5"
+          >
+            <Icon className="h-5 w-5 text-primary shrink-0" />
+            <span className="font-medium flex-1">{label}</span>
+            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+          </Link>
+        ))}
+      </div>
 
+      {/* PROFILE EDIT FORM */}
+      <div className="px-4 mt-4">
         <CustomerProfileForm />
+      </div>
 
-        <div className="space-y-2 mt-8">
-          <Button variant="outline" className="w-full justify-start gap-2" asChild>
-            <Link href="/orders">
-              <Package className="h-4 w-4" />
-              ຄຳສັ່ງຊື້ຂອງຂ້ອຍ
-            </Link>
-          </Button>
-          <Button variant="outline" className="w-full justify-start gap-2" asChild>
-            <Link href="/products">
-              <ShoppingCart className="h-4 w-4" />
-              ກະຕ່າສິນຄ້າ
-              {cartCount > 0 ? ` (${cartCount})` : ""}
-            </Link>
-          </Button>
-          <Button variant="outline" className="w-full justify-start gap-2" asChild>
-            <Link href="/shipping">
-              <Truck className="h-4 w-4" />
-              ການຈັດສົ່ງ ແລະ ຄ່າສົ່ງ
-            </Link>
-          </Button>
-        </div>
-
-        <Button
-          variant="ghost"
-          className="w-full mt-6 text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
+      {/* LOGOUT */}
+      <div className="px-4 mt-4">
+        <button
+          type="button"
           onClick={() => {
             logout();
             router.replace("/");
           }}
+          className="w-full rounded-[14px] border border-destructive/40 py-3 font-semibold text-destructive"
         >
-          <LogOut className="h-4 w-4" />
           ອອກຈາກລະບົບ
-        </Button>
+        </button>
       </div>
     </div>
   );

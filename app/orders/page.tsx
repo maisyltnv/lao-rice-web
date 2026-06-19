@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppTopBar } from "@/components/layout/app-top-bar";
 import { useAuth } from "@/lib/auth";
 import {
   apiListCustomerOrders,
@@ -70,74 +71,85 @@ export default function MyOrdersPage() {
 
   if (!isReady || !token) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground">
-        ກຳລັງໂຫຼດ...
-      </div>
+      <>
+        <AppTopBar title="ຄຳສັ່ງຊື້" />
+        <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
+          ກຳລັງໂຫຼດ...
+        </div>
+      </>
     );
   }
 
-  return (
-    <div className="container mx-auto px-4 py-10 max-w-2xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Package className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">ຄຳສັ່ງຊື້ຂອງຂ້ອຍ</h1>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          ເບີໂທ: <strong>{phone}</strong>
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          <Link href="/account" className="text-primary hover:underline">
-            ບັນຊີຂອງຂ້ອຍ
-          </Link>
-        </p>
-      </div>
+  const isEmpty =
+    !loading && results.length === 0 && total === 0;
 
-      {loading && results.length === 0 ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <>
-          {error && (
-            <p className="text-sm text-muted-foreground rounded-lg bg-muted px-4 py-3 mb-4">
-              {error}
-            </p>
-          )}
-          <ul className="space-y-4">
-            {results.map((order) => (
-              <li key={order.id}>
-                <CustomerOrderCard order={order} />
-              </li>
-            ))}
-          </ul>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-8">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!hasPrev || loading}
-                onClick={() => void loadPage(page - 1)}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                ກ່ອນໜ້າ
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                ໜ້າ {page}/{totalPages} ({total} ຄຳສັ່ງ)
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!hasNext || loading}
-                onClick={() => void loadPage(page + 1)}
-              >
-                ຕໍ່ໄປ
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+  return (
+    <>
+      <AppTopBar title="ຄຳສັ່ງຊື້" />
+      <div className="px-4 pt-4 pb-8">
+        {loading && results.length === 0 ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : isEmpty ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-accent">
+              <Package className="h-9 w-9 text-primary" />
             </div>
-          )}
-        </>
-      )}
-    </div>
+            <p className="mb-6 text-base font-semibold text-foreground">
+              ຍັງບໍ່ມີຄຳສັ່ງຊື້
+            </p>
+            <Button
+              asChild
+              className="rounded-[24px] px-6"
+            >
+              <Link href="/">ເລີ່ມຊື້ເຄື່ອງ</Link>
+            </Button>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <p className="mb-3 rounded-[14px] bg-muted px-4 py-3 text-sm text-muted-foreground">
+                {error}
+              </p>
+            )}
+            <ul>
+              {results.map((order) => (
+                <li key={order.id}>
+                  <CustomerOrderCard order={order} />
+                </li>
+              ))}
+            </ul>
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-[24px]"
+                  disabled={!hasPrev || loading}
+                  onClick={() => void loadPage(page - 1)}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  ກ່ອນໜ້າ
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  ໜ້າ {page}/{totalPages} ({total} ຄຳສັ່ງ)
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-[24px]"
+                  disabled={!hasNext || loading}
+                  onClick={() => void loadPage(page + 1)}
+                >
+                  ຕໍ່ໄປ
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
   );
 }

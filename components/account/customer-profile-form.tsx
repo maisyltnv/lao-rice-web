@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { getCustomerPhone } from "@/lib/customer-account";
+import { onlyDigits } from "@/lib/input-utils";
 import {
   getCustomerProfileFromUser,
   hasSavedCustomerProfile,
@@ -97,7 +98,7 @@ export function CustomerProfileForm() {
   const hasProfile = hasSavedCustomerProfile(getCustomerProfileFromUser(user));
 
   return (
-    <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
+    <div className="rounded-[20px] border border-border bg-card shadow-app-soft p-5 space-y-4">
       <div>
         <h2 className="font-semibold flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
@@ -116,7 +117,7 @@ export function CustomerProfileForm() {
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="profile-name"
-            className="pl-10"
+            className="h-12 rounded-[14px] border border-border bg-card pl-10"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="ຊື່ຜູ້ຮັບເຄື່ອງ"
@@ -128,9 +129,11 @@ export function CustomerProfileForm() {
         <Label htmlFor="profile-phone">ເບີໂທຈັດສົ່ງ</Label>
         <Input
           id="profile-phone"
+          className="h-12 rounded-[14px] border border-border bg-card px-3"
           type="tel"
+          inputMode="numeric"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => setPhone(onlyDigits(e.target.value))}
           placeholder="020 xxxx xxxx"
         />
       </div>
@@ -139,6 +142,7 @@ export function CustomerProfileForm() {
         <Label htmlFor="profile-address">ທີ່ຢູ່ / ບ້ານ / ຖະໜົນ</Label>
         <Input
           id="profile-address"
+          className="h-12 rounded-[14px] border border-border bg-card px-3"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="ລາຍລະອຽດທີ່ຢູ່"

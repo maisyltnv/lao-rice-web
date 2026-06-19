@@ -29,6 +29,13 @@ const statusLabel: Record<Order["status"], string> = {
   delivered: "ສຳເລັດ",
 };
 
+const statusChip: Record<Order["status"], string> = {
+  pending: "bg-amber-100 text-amber-800",
+  processing: "bg-blue-100 text-blue-800",
+  shipped: "bg-indigo-100 text-indigo-800",
+  delivered: "bg-green-100 text-green-800",
+};
+
 type CustomerOrderCardProps = {
   order: Order;
   className?: string;
@@ -54,20 +61,25 @@ export function CustomerOrderCard({ order, className = "" }: CustomerOrderCardPr
     <Collapsible open={open} onOpenChange={setOpen}>
       <article
         className={cn(
-          "rounded-xl border border-border bg-card shadow-sm overflow-hidden",
+          "rounded-[20px] bg-card shadow-app-soft p-4 mb-3 overflow-hidden",
           className
         )}
       >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="w-full text-left p-4 hover:bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="w-full text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-[16px]"
           >
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <p className="font-semibold text-primary">{order.id}</p>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted">
+                  <p className="text-[15px] font-bold text-primary">{order.id}</p>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                      statusChip[order.status]
+                    )}
+                  >
                     {statusLabel[order.status]}
                   </span>
                 </div>
@@ -99,7 +111,7 @@ export function CustomerOrderCard({ order, className = "" }: CustomerOrderCardPr
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-4 pb-4 pt-0 space-y-4 border-t border-border">
+          <div className="mt-4 space-y-4 border-t border-border">
             <div className="grid gap-2 text-sm pt-4">
               <div className="flex items-start gap-2 text-muted-foreground">
                 <User className="h-4 w-4 shrink-0 mt-0.5" />

@@ -32,9 +32,9 @@ if [ -n "${NEXT_PUBLIC_API_URL:-}" ]; then
 elif [ -f .env.production ]; then
   API_URL="$(grep -E '^NEXT_PUBLIC_API_URL=' .env.production | head -1 | cut -d= -f2- || true)"
 fi
-API_URL="${API_URL:-http://62.171.159.75:8081}"
+API_URL="${API_URL:-https://api.khaosan.online}"
 case "$API_URL" in
-  *127.0.0.1*|*localhost*) API_URL="http://62.171.159.75:8081" ;;
+  *127.0.0.1*|*localhost*) API_URL="https://api.khaosan.online" ;;
 esac
 
 echo "==> Ensure production env (API_URL=${API_URL})"
