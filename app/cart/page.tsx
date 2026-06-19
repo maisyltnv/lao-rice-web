@@ -97,7 +97,7 @@ export default function CartPage() {
         ))}
       </div>
 
-      <div className="fixed bottom-[68px] left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 rounded-t-[24px] border-t border-border bg-card px-4 pb-4 pt-4 shadow-app-soft">
+      <div className="fixed bottom-[68px] left-1/2 z-30 app-width -translate-x-1/2 rounded-t-[24px] border-t border-border bg-card px-4 pb-4 pt-4 shadow-app-soft">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[15px] text-muted-foreground">ລວມຍ່ອຍ</span>
           <span className="text-[20px] font-extrabold text-primary">

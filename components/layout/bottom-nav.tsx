@@ -30,7 +30,7 @@ export function BottomNav() {
   const { cartCount } = useStore();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-card shadow-app-nav">
+    <nav className="fixed bottom-0 left-1/2 z-40 app-width -translate-x-1/2 border-t border-border bg-card shadow-app-nav">
       <div className="flex items-stretch px-1.5 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
         {TABS.map((t) => {
           const active = t.match(pathname);

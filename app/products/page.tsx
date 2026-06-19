@@ -129,7 +129,7 @@ function ProductsPageContent() {
       </p>
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 px-4 py-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 px-4 py-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -138,7 +138,7 @@ function ProductsPageContent() {
           ))}
         </div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 px-4 py-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 px-4 py-3">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

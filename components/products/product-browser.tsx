@@ -44,7 +44,7 @@ export function ProductBrowser() {
       <CategoryChips value={cat} onChange={setCat} />
 
       {productsLoading ? (
-        <div className="grid grid-cols-2 gap-3 px-4 py-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 px-4 py-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -57,7 +57,7 @@ export function ProductBrowser() {
           ບໍ່ພົບສິນຄ້າ
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 px-4 py-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 px-4 py-3">
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

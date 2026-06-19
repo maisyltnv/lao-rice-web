@@ -211,7 +211,7 @@ export default function ProductDetailPage() {
               <h2 className="mb-3 text-[17px] font-extrabold">
                 ສິນຄ້າທີ່ກ່ຽວຂ້ອງ
               </h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {relatedProducts.map((relatedProduct) => (
                   <ProductCard key={relatedProduct.id} product={relatedProduct} />
                 ))}
@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Sticky bottom action bar */}
-      <div className="fixed bottom-[68px] left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
+      <div className="fixed bottom-[68px] left-1/2 z-30 app-width -translate-x-1/2 border-t border-border bg-card px-4 pt-4 pb-4 shadow-app-soft">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
             <span className="text-xs text-muted-foreground">ລາຄາ</span>

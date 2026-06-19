@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full justify-center bg-[oklch(0.95_0.02_85)]">
-      <div className="relative flex min-h-screen w-full max-w-[480px] flex-col bg-background shadow-app-soft">
+      <div className="relative flex min-h-screen app-width flex-col bg-background shadow-app-soft">
         <main className="flex-1 pb-24">{children}</main>
         <BottomNav />
       </div>
