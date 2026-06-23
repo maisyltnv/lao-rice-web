@@ -9,7 +9,8 @@ import { BottomNav } from "@/components/layout/bottom-nav";
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  if (pathname.startsWith("/admin")) {
+  // Admin uses its own layout; legal pages render standalone (no app chrome).
+  if (pathname.startsWith("/admin") || pathname.startsWith("/privacy")) {
     return <>{children}</>;
   }
 

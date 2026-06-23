@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Package, ShoppingCart, Truck, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { apiDeleteCustomerAccount } from "@/lib/api";
 import { CustomerProfileForm } from "@/components/account/customer-profile-form";
 import { getCustomerPhone } from "@/lib/customer-account";
 import { getCustomerProfileFromUser } from "@/lib/customer-profile";
@@ -104,6 +105,32 @@ export default function AccountPage() {
           className="w-full rounded-[14px] border border-destructive/40 py-3 font-semibold text-destructive"
         >
           ອອກຈາກລະບົບ
+        </button>
+      </div>
+
+      {/* DELETE ACCOUNT */}
+      <div className="px-4 mt-2 mb-6">
+        <button
+          type="button"
+          onClick={async () => {
+            if (
+              !window.confirm(
+                "ການລຶບບັນຊີຈະລຶບຂໍ້ມູນສ່ວນຕົວຂອງທ່ານຖາວອນ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້. ຢືນຢັນບໍ?"
+              )
+            )
+              return;
+            try {
+              await apiDeleteCustomerAccount();
+            } catch {
+              window.alert("ລຶບບັນຊີບໍ່ສຳເລັດ ລອງໃໝ່ອີກຄັ້ງ");
+              return;
+            }
+            logout();
+            router.replace("/");
+          }}
+          className="w-full py-3 text-sm font-medium text-muted-foreground underline"
+        >
+          ລຶບບັນຊີ
         </button>
       </div>
     </div>

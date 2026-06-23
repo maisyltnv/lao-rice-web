@@ -292,6 +292,11 @@ export async function apiMe(): Promise<ApiUser> {
   return data;
 }
 
+/** DELETE /auth/me — permanently delete the signed-in customer's account */
+export async function apiDeleteCustomerAccount(): Promise<void> {
+  await userClient.delete("/auth/me");
+}
+
 /** PUT /auth/me/profile — save default shipping for checkout prefill */
 export async function apiUpdateCustomerProfile(
   body: UpdateCustomerProfileBody
