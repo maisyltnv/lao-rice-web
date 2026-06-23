@@ -120,11 +120,11 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 text-primary-foreground/80">
                 <Phone className="h-4 w-4" />
-                <span>020 5555 1234</span>
+                <span>020 5569 7625</span>
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/80">
                 <MessageCircle className="h-4 w-4" />
-                <span>WhatsApp: 020 5555 1234</span>
+                <span>WhatsApp: 020 5569 7625</span>
               </li>
               <li className="flex items-center gap-2 text-primary-foreground/80">
                 <Mail className="h-4 w-4" />
