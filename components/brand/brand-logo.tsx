@@ -12,7 +12,7 @@ export function BrandLogo({ size = 40, className, priority }: BrandLogoProps) {
   return (
     <Image
       src="/logo.png"
-      alt="ຮ້ານເຂົ້າສານ"
+      alt="ເຂົ້າສານ"
       width={size}
       height={size}
       className={cn("shrink-0 rounded-full object-cover", className)}
