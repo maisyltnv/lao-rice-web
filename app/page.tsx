@@ -18,7 +18,7 @@ export default function HomePage() {
         }
         right={
           <a
-            href="https://wa.me/8562055551234"
+            href="https://wa.me/8562055697625"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 rounded-full bg-[#25D366] px-3 py-1.5 text-xs font-bold text-white"

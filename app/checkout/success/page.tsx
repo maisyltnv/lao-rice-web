@@ -64,7 +64,7 @@ function CheckoutSuccessContent() {
 
         <div className="flex items-center justify-center gap-2 text-muted-foreground mb-8">
           <Phone className="h-4 w-4" />
-          <span className="text-sm">ມີຄຳຖາມ? ໂທຫາ 020 5555 1234</span>
+          <span className="text-sm">ມີຄຳຖາມ? ໂທຫາ 020 5569 7625</span>
         </div>
 
         <div className="flex flex-col gap-3">
