@@ -31,7 +31,7 @@ export function AppPromoBanner() {
   if (banners.length === 0) {
     return (
       <div className="px-4">
-        <div className="relative flex h-28 flex-col justify-center overflow-hidden rounded-[20px] bg-primary p-5 text-primary-foreground">
+        <div className="relative flex aspect-[16/7] w-full flex-col justify-center overflow-hidden rounded-[20px] bg-primary p-5 text-primary-foreground">
           <span className="mb-1 self-start rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold">
             ໂປຣໂມຊັນ
           </span>
@@ -46,7 +46,7 @@ export function AppPromoBanner() {
 
   const b = banners[i];
   const inner = (
-    <div className="relative h-32 overflow-hidden rounded-[20px]">
+    <div className="relative aspect-[16/7] w-full overflow-hidden rounded-[20px]">
       <BannerImage
         src={b.image_url}
         alt={b.title}
