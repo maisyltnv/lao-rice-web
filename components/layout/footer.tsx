@@ -38,7 +38,7 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
               <BrandLogo size={40} />
-              <span className="text-xl font-bold">ຮ້ານເຂົ້າສານ</span>
+              <span className="text-xl font-bold">ເຂົ້າສານ</span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               ຂາຍເຂົ້າຈ້າວ ເຂົ້າໜຽວ ຄຸນນະພາບດີ — ສັ່ງອອນລາຍ ແລະ ຈັດສົ່ງພາຍໃນນະຄອນຫຼວງວຽງຈັນ.
@@ -158,7 +158,7 @@ export function Footer() {
       <div className="border-t border-primary-foreground/10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60">
-            <p>&copy; 2025 ຮ້ານເຂົ້າສານ. ສະຫງວນລິຂະສິດ.</p>
+            <p>&copy; 2025 ເຂົ້າສານ. ສະຫງວນລິຂະສິດ.</p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-primary-foreground transition-colors">
                 ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ

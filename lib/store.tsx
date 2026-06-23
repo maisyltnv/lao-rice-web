@@ -100,7 +100,7 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-/** ຂໍ້ມູນຕົວຢ່າງເມື່ອ API ບໍ່ເຊື່ອມ — ສອດຄ່ອງຮ້ານເຂົ້າສານ */
+/** ຂໍ້ມູນຕົວຢ່າງເມື່ອ API ບໍ່ເຊື່ອມ — ສອດຄ່ອງເຂົ້າສານ */
 const mockProducts: Product[] = [
   {
     id: "1",

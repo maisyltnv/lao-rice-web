@@ -81,7 +81,7 @@ export function Header() {
             <Link href="/" className="flex items-center gap-2">
               <BrandLogo size={40} priority />
               <span className="text-xl font-bold text-primary hidden sm:block">
-                ຮ້ານເຂົ້າສານ
+                ເຂົ້າສານ
               </span>
             </Link>
 

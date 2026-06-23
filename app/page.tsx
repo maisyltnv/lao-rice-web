@@ -13,7 +13,7 @@ export default function HomePage() {
           <span className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icon-192.png" alt="" className="h-8 w-8 rounded-[10px]" />
-            ຮ້ານເຂົ້າສານ
+            ເຂົ້າສານ
           </span>
         }
         right={

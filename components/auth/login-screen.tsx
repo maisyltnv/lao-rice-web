@@ -131,7 +131,7 @@ export function LoginScreen({
                 isAdmin ? "text-amber-400/90" : "text-primary"
               )}
             >
-              {isAdmin ? "ແອັດມິນ — /auth/admin/login" : "ຮ້ານເຂົ້າສານ — /auth/login"}
+              {isAdmin ? "ແອັດມິນ — /auth/admin/login" : "ເຂົ້າສານ — /auth/login"}
             </p>
             <h1 className="text-xl font-bold">{brandTitle}</h1>
             <p
