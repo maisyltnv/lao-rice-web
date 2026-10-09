@@ -51,6 +51,12 @@ if [ -d "${HOME}/.npm" ] && [ ! -w "${HOME}/.npm" ]; then
   sudo chown -R "$(id -u):$(id -g)" "${HOME}/.npm" 2>/dev/null || true
 fi
 npm ci
+# Security gate: stop the deploy (before building) if a production dependency
+# has a CRITICAL advisory. The running version stays online. Registry/network
+# errors do not block.
+npm audit --omit=dev --json > "/tmp/npm-audit-$$.json" 2>/dev/null || true
+node -e "let a={};try{a=require('/tmp/npm-audit-$$.json')}catch(e){};const c=((a.metadata||{}).vulnerabilities||{}).critical||0;if(c>0){console.error('SECURITY GATE: '+c+' critical vulnerabilities in production dependencies - deploy stopped, run npm audit');process.exit(1)}"
+rm -f "/tmp/npm-audit-$$.json"
 
 echo "==> Build Next.js (NEXT_PUBLIC_API_URL=${API_URL})"
 export NEXT_PUBLIC_API_URL="${API_URL}"
